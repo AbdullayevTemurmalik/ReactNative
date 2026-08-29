@@ -244,7 +244,7 @@ export const AppProvider = ({ children }) => {
   // EAS OTA Updates qo'lda tekshirish funksiyasi
   const checkForUpdates = async (showFeedback = true) => {
     try {
-      if (__DEV__) {
+      if (__DEV__ || !Updates.isEnabled) {
         if (showFeedback) {
           showToast(language === 'ru' ? '🛠️ В режиме разработки обновления отключены' : '🛠️ Dasturlash (Dev) rejimida yangilanishlar tekshirilmaydi', 'info');
         }
