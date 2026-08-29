@@ -22,10 +22,8 @@ function MainNavigator() {
   const {
     isInitializing,
     activeTab,
-    currentUser,
     isAuthModalVisible,
     setIsAuthModalVisible,
-    continueAsGuest,
   } = useApp();
 
   if (isInitializing) {
@@ -46,8 +44,6 @@ function MainNavigator() {
     }
   };
 
-  const isAuthOpen = !currentUser || isAuthModalVisible;
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
@@ -58,14 +54,8 @@ function MainNavigator() {
 
       {/* AUTH (LOGIN & REGISTER & GUEST) MODAL */}
       <AuthModal
-        visible={isAuthOpen}
-        onClose={() => {
-          if (!currentUser) {
-            continueAsGuest();
-          } else {
-            setIsAuthModalVisible(false);
-          }
-        }}
+        visible={isAuthModalVisible}
+        onClose={() => setIsAuthModalVisible(false)}
       />
     </SafeAreaView>
   );
