@@ -58,7 +58,7 @@ export const AuthModal = ({ visible, onClose }) => {
       setErrorMessage(isRu ? 'Введите корректный номер телефона' : 'Telefon raqamini to\'liq kiriting (+998 90 123 45 67)');
       return;
     }
-    if (!password.trim() || password.length < 4) {
+    if (!password.trim()) {
       setErrorMessage(isRu ? 'Введите пароль' : 'Parolni kiriting');
       return;
     }

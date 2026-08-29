@@ -18,16 +18,14 @@ export const truncateText = (text, maxLength = 25) => {
 
 // Telefon raqamini chiroyli formatlash (+998 90 123 45 67)
 export const formatPhoneNumber = (input) => {
-  // Faqat raqamlarni ajratib olamiz
+  if (!input) return '+998 ';
   const numbersOnly = input.replace(/\D/g, '');
   
-  // 998 bilan boshlanganini hisobga olamiz yoki olib tashlaymiz
   let localDigits = numbersOnly;
   if (localDigits.startsWith('998')) {
     localDigits = localDigits.substring(3);
   }
   
-  // Maksimal 9 ta raqam (operator kodi + raqam)
   localDigits = localDigits.substring(0, 9);
   
   let formatted = '+998';
@@ -47,8 +45,9 @@ export const formatPhoneNumber = (input) => {
   return formatted;
 };
 
-// Telefon to'liq kiritilganini tekshirish
+// Telefon kiritilganini tekshirish (kamida 9 ta raqam bo'lishi kifoya)
 export const isPhoneValid = (phone) => {
+  if (!phone) return false;
   const digits = phone.replace(/\D/g, '');
-  return digits.length === 12 && digits.startsWith('998');
+  return digits.length >= 9;
 };

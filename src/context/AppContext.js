@@ -221,18 +221,27 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Ro'yxatdan o'tish (Akkaunt yaratish)
+  const getPhoneDigits = (p) => (p || '').replace(/\D/g, '').slice(-9);
+
   const register = useCallback(
     (name, phone, password) => {
-      const cleanPhone = phone.trim();
-      const existing = users.find((u) => u.phone === cleanPhone);
+      const inputDigits = getPhoneDigits(phone);
+      const existing = users.find((u) => getPhoneDigits(u.phone) === inputDigits);
       if (existing) {
-        return { success: false, error: language === 'ru' ? 'Пользователь с таким номером уже зарегистрирован' : 'Bu telefon raqam allaqachon ro\'yxatdan o\'tgan' };
+        return {
+          success: false,
+          error:
+            language === 'ru'
+              ? 'Пользователь с таким номером уже зарегистрирован'
+              : "Bu telefon raqam allaqachon ro'yxatdan o'tgan",
+        };
       }
 
+      const formatted = formatPhoneNumber(phone);
       const newUser = {
         id: 'user-' + Date.now(),
-        name: name.trim(),
-        phone: cleanPhone,
+        name: name.trim() || 'Foydalanuvchi',
+        phone: formatted,
         password: password.trim(),
         createdAt: new Date().toISOString(),
       };
@@ -249,40 +258,47 @@ export const AppProvider = ({ children }) => {
   // Kirish (Log In)
   const login = useCallback(
     (phone, password) => {
-      const cleanPhone = phone.trim();
+      const inputDigits = getPhoneDigits(phone);
+      const cleanPass = (password || '').trim();
       const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-      const user = users.find((u) => u.phone === cleanPhone && u.password === password.trim());
 
-      if (!user) {
-        // Agar default parol bilan topilmasa, default foydalanuvchini tekshiramiz
-        if (cleanPhone === '+998 90 123 45 67' || cleanPhone.includes('901234567')) {
-          const defaultU = {
-            id: 'user-default',
-            name: 'Temur Malik',
-            phone: '+998 90 123 45 67',
-            isGuest: false,
+      // Foydalanuvchini oxirgi 9 ta raqam bo'yicha qidiramiz
+      let user = users.find((u) => getPhoneDigits(u.phone) === inputDigits);
+
+      if (user) {
+        // Agar parol to'g'ri kelmasa
+        if (user.password && user.password !== cleanPass) {
+          return {
+            success: false,
+            error:
+              language === 'ru'
+                ? 'Неверный пароль'
+                : "Kiritilgan parol noto'g'ri",
           };
-          setCurrentUser(defaultU);
-          saveCurrentUserToStorage(defaultU);
-          setIsAuthModalVisible(false);
-          showToast(t('auth_login_success'), 'success');
-          return { success: true, user: defaultU };
         }
-        return {
-          success: false,
-          error: language === 'ru' ? 'Неверный номер телефона или пароль' : 'Telefon raqami yoki parol noto\'g\'ri',
-        };
-      }
 
-      // 3 kunlik muddatni tekshirish
-      if (user.loggedOutAt && Date.now() - user.loggedOutAt > THREE_DAYS_MS) {
-        return {
-          success: false,
-          error:
-            language === 'ru'
-              ? '⚠️ Срок действия аккаунта (3 дня) истек. Пожалуйста, создайте новый аккаунт.'
-              : '⚠️ Ushbu akkaunt muddati (3 kun) tugagan. Iltimos, qayta ro\'yxatdan o\'ting.',
+        // 3 kunlik muddatni tekshirish
+        if (user.loggedOutAt && Date.now() - user.loggedOutAt > THREE_DAYS_MS) {
+          return {
+            success: false,
+            error:
+              language === 'ru'
+                ? '⚠️ Срок действия аккаунта (3 дня) истек. Пожалуйста, создайте новый аккаунт.'
+                : "⚠️ Ushbu akkaunt muddati (3 kun) tugagan. Iltimos, qayta ro'yxatdan o'ting.",
+          };
+        }
+      } else {
+        // Agar foydalanuvchi bazada bo'lmasa, uni darhol avtomatik kiritamiz
+        user = {
+          id: 'user-' + Date.now(),
+          name: inputDigits === '901234567' ? 'Temur Malik' : 'Foydalanuvchi',
+          phone: formatPhoneNumber(phone),
+          password: cleanPass,
+          createdAt: new Date().toISOString(),
         };
+        const updatedUsers = [...users, user];
+        setUsers(updatedUsers);
+        saveUsersToStorage(updatedUsers);
       }
 
       const authenticatedUser = { ...user, isGuest: false, loggedOutAt: null };
