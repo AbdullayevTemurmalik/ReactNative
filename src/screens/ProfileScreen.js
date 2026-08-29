@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useApp } from '../context/AppContext';
 import { formatPrice } from '../utils/formatters';
 
@@ -18,7 +17,6 @@ import { SecurityPrivacyModal } from '../components/SecurityPrivacyModal';
 import { SupportModal } from '../components/SupportModal';
 import { NotificationsModal } from '../components/NotificationsModal';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { AuthModal } from '../components/AuthModal';
 
 export const ProfileScreen = () => {
   const {
@@ -28,8 +26,7 @@ export const ProfileScreen = () => {
     orders,
     favorites,
     unreadNotifsCount,
-    showToast,
-    clearCart,
+    setActiveTab,
     t,
     language,
   } = useApp();
@@ -275,8 +272,6 @@ export const ProfileScreen = () => {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
             </TouchableOpacity>
-          </View>
-
           </View>
         </View>
 
@@ -629,21 +624,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#15803D',
-  },
-  clearCacheBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEE2E2',
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 16,
-    gap: 6,
-  },
-  clearCacheText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#EF4444',
   },
   versionText: {
     fontSize: 11,
