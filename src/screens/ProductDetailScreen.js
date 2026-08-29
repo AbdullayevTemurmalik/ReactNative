@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   Modal,
   Share,
-  TouchableWithoutFeedback,
   Dimensions,
   Animated,
   PanResponder,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -58,7 +58,7 @@ export const ProductDetailScreen = () => {
       Animated.spring(panY, {
         toValue: 0,
         bounciness: 0,
-        speed: 18,
+        speed: 20,
         useNativeDriver: true,
       }).start();
     }
@@ -85,7 +85,7 @@ export const ProductDetailScreen = () => {
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return (
-          gestureState.dy > 8 &&
+          gestureState.dy > 10 &&
           Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
         );
       },
@@ -95,7 +95,7 @@ export const ProductDetailScreen = () => {
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 65 || gestureState.vy > 0.35) {
+        if (gestureState.dy > 70 || gestureState.vy > 0.4) {
           handleClose();
         } else {
           Animated.spring(panY, {
@@ -136,255 +136,259 @@ export const ProductDetailScreen = () => {
       animationType="none"
       onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={handleClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.sheet,
-                {
-                  transform: [{ translateY: panY }],
-                },
-              ]}
-            >
-              {/* Tutqich va yuqori navigatsiya paneli */}
-              <View {...panResponder.panHandlers} style={styles.dragHandleArea}>
-                <View style={styles.handle} />
+      <View style={styles.overlay}>
+        {/* Orqa qorong'u fon (bosilganda yopiladi, ScrollView ga xalaqit bermaydi) */}
+        <TouchableOpacity
+          style={StyleSheet.absoluteFillObject}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
 
-                <View style={styles.topNav}>
-                  <TouchableOpacity
-                    style={styles.navBtn}
-                    onPress={handleClose}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons name="chevron-down" size={24} color="#0F172A" />
-                  </TouchableOpacity>
+        {/* Modal kartochkasi */}
+        <Animated.View
+          style={[
+            styles.sheet,
+            {
+              transform: [{ translateY: panY }],
+            },
+          ]}
+        >
+          {/* Tutqich va yuqori navigatsiya paneli (Faqat tepasi gesture ushlaydi) */}
+          <View {...panResponder.panHandlers} style={styles.dragHandleArea}>
+            <View style={styles.handle} />
 
-                  <Text style={styles.navTitle} numberOfLines={1}>
-                    {displayProduct.name}
-                  </Text>
-
-                  <View style={styles.navActions}>
-                    <TouchableOpacity
-                      style={styles.navBtn}
-                      onPress={handleShare}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Ionicons
-                        name="share-social-outline"
-                        size={20}
-                        color="#0F172A"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.navBtn}
-                      onPress={() => toggleFavorite(displayProduct.id)}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Ionicons
-                        name={favorite ? 'heart' : 'heart-outline'}
-                        size={20}
-                        color={favorite ? '#EF4444' : '#0F172A'}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-
-              {/* Barcha ma'lumotlar birgalikda silliq aylanuvchi ScrollView */}
-              <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={true}
-                contentContainerStyle={styles.scroll}
-                nestedScrollEnabled={true}
-                keyboardShouldPersistTaps="handled"
-                bounces={true}
+            <View style={styles.topNav}>
+              <TouchableOpacity
+                style={styles.navBtn}
+                onPress={handleClose}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                {/* Mahsulot Rasmi */}
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: displayProduct.image }}
-                    style={styles.image}
-                    resizeMode="cover"
-                  />
-                  {discount > 0 && (
-                    <View style={styles.discountBadge}>
-                      <Text style={styles.discountText}>
-                        -{discount}% {t('discount')}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                <Ionicons name="chevron-down" size={24} color="#0F172A" />
+              </TouchableOpacity>
 
-                {/* Mahsulot ma'lumotlari */}
-                <View style={styles.body}>
-                  {/* Kategoriya va mavjudlik */}
-                  <View style={styles.categoryRatingRow}>
-                    <View style={styles.categoryTag}>
-                      <Text style={styles.categoryText}>
-                        {t(displayProduct.categoryKey || 'cat_all')}
-                      </Text>
-                    </View>
-                    <View style={styles.stockBadge}>
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={14}
-                        color="#16A34A"
-                      />
-                      <Text style={styles.stockText}>{t('in_stock')}</Text>
-                    </View>
-                  </View>
+              <Text style={styles.navTitle} numberOfLines={1}>
+                {displayProduct.name}
+              </Text>
 
-                  {/* Mahsulot nomi */}
-                  <Text style={styles.title}>{displayProduct.name}</Text>
-
-                  {/* Reyting qatori */}
-                  <View style={styles.ratingSection}>
-                    <Ionicons name="star" size={16} color="#F59E0B" />
-                    <Text style={styles.ratingScore}>
-                      {displayProduct.rating}
-                    </Text>
-                    <Text style={styles.ratingCount}>
-                      ({displayProduct.reviewsCount} {t('reviews_count')})
-                    </Text>
-                    <Text style={styles.dotSeparator}>•</Text>
-                    <Text style={styles.soldText}>
-                      120+ {t('sold_count')}
-                    </Text>
-                  </View>
-
-                  {/* Narx qatori */}
-                  <View style={styles.priceCard}>
-                    <View>
-                      {displayProduct.oldPrice && (
-                        <Text style={styles.oldPrice}>
-                          {formatPrice(displayProduct.oldPrice)}
-                        </Text>
-                      )}
-                      <Text style={styles.price}>
-                        {formatPrice(displayProduct.price)}
-                      </Text>
-                    </View>
-                    {savings > 0 && (
-                      <View style={styles.savingsBox}>
-                        <Text style={styles.savingsLabel}>{t('savings')}</Text>
-                        <Text style={styles.savingsValue}>
-                          {formatPrice(savings)}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Tavsif */}
-                  <Text style={styles.sectionHeader}>
-                    {t('about_product')}
-                  </Text>
-                  <Text style={styles.description}>
-                    {isRu && displayProduct.description_ru
-                      ? displayProduct.description_ru
-                      : displayProduct.description}
-                  </Text>
-
-                  {/* Xususiyatlari */}
-                  {displayProduct.specs && displayProduct.specs.length > 0 && (
-                    <>
-                      <Text style={styles.sectionHeader}>
-                        {t('specs_title')}
-                      </Text>
-                      <View style={styles.specsTable}>
-                        {displayProduct.specs.map((item, idx) => (
-                          <View
-                            key={idx}
-                            style={[
-                              styles.specRow,
-                              idx % 2 === 1 && styles.specRowAlt,
-                            ]}
-                          >
-                            <Text style={styles.specLabel}>
-                              {isRu && item.label_ru
-                                ? item.label_ru
-                                : item.label}
-                            </Text>
-                            <Text style={styles.specValue}>{item.value}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </>
-                  )}
-
-                  {/* Kafolat va yetkazib berish xizmati */}
-                  <View style={styles.guaranteeCard}>
-                    <View style={styles.guaranteeItem}>
-                      <Ionicons
-                        name="shield-checkmark"
-                        size={22}
-                        color="#2563EB"
-                      />
-                      <View style={styles.guaranteeTextContainer}>
-                        <Text style={styles.guaranteeTitle}>
-                          {t('guarantee_title')}
-                        </Text>
-                        <Text style={styles.guaranteeSub}>
-                          {t('guarantee_sub')}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    <View style={styles.guaranteeItem}>
-                      <Ionicons name="cube" size={22} color="#16A34A" />
-                      <View style={styles.guaranteeTextContainer}>
-                        <Text style={styles.guaranteeTitle}>
-                          {t('delivery_title')}
-                        </Text>
-                        <Text style={styles.guaranteeSub}>
-                          {t('delivery_sub')}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </ScrollView>
-
-              {/* Pastki savatga qo'shish paneli */}
-              <View style={styles.bottomBar}>
-                <View style={styles.stepper}>
-                  <TouchableOpacity
-                    style={styles.stepperBtn}
-                    onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="remove" size={18} color="#0F172A" />
-                  </TouchableOpacity>
-                  <Text style={styles.stepperValue}>{quantity}</Text>
-                  <TouchableOpacity
-                    style={styles.stepperBtn}
-                    onPress={() => setQuantity((q) => q + 1)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="add" size={18} color="#0F172A" />
-                  </TouchableOpacity>
-                </View>
-
+              <View style={styles.navActions}>
                 <TouchableOpacity
-                  style={styles.addCartBtn}
-                  onPress={handleAddToCart}
-                  activeOpacity={0.85}
+                  style={styles.navBtn}
+                  onPress={handleShare}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="cart" size={18} color="#FFFFFF" />
-                  <Text style={styles.addCartText}>
-                    {t('add_to_cart_btn')}
-                  </Text>
+                  <Ionicons
+                    name="share-social-outline"
+                    size={20}
+                    color="#0F172A"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.navBtn}
+                  onPress={() => toggleFavorite(displayProduct.id)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons
+                    name={favorite ? 'heart' : 'heart-outline'}
+                    size={20}
+                    color={favorite ? '#EF4444' : '#0F172A'}
+                  />
                 </TouchableOpacity>
               </View>
-            </Animated.View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+            </View>
+          </View>
+
+          {/* 100% toza, hech qachon qotmaydigan Native ScrollView */}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            overScrollMode={Platform.OS === 'android' ? 'never' : 'auto'}
+            bounces={Platform.OS === 'ios'}
+          >
+            {/* Mahsulot Rasmi */}
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: displayProduct.image }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+              {discount > 0 && (
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountText}>
+                    -{discount}% {t('discount')}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Mahsulot ma'lumotlari */}
+            <View style={styles.body}>
+              {/* Kategoriya va mavjudlik */}
+              <View style={styles.categoryRatingRow}>
+                <View style={styles.categoryTag}>
+                  <Text style={styles.categoryText}>
+                    {t(displayProduct.categoryKey || 'cat_all')}
+                  </Text>
+                </View>
+                <View style={styles.stockBadge}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={14}
+                    color="#16A34A"
+                  />
+                  <Text style={styles.stockText}>{t('in_stock')}</Text>
+                </View>
+              </View>
+
+              {/* Mahsulot nomi */}
+              <Text style={styles.title}>{displayProduct.name}</Text>
+
+              {/* Reyting qatori */}
+              <View style={styles.ratingSection}>
+                <Ionicons name="star" size={16} color="#F59E0B" />
+                <Text style={styles.ratingScore}>
+                  {displayProduct.rating}
+                </Text>
+                <Text style={styles.ratingCount}>
+                  ({displayProduct.reviewsCount} {t('reviews_count')})
+                </Text>
+                <Text style={styles.dotSeparator}>•</Text>
+                <Text style={styles.soldText}>
+                  120+ {t('sold_count')}
+                </Text>
+              </View>
+
+              {/* Narx qatori */}
+              <View style={styles.priceCard}>
+                <View>
+                  {displayProduct.oldPrice && (
+                    <Text style={styles.oldPrice}>
+                      {formatPrice(displayProduct.oldPrice)}
+                    </Text>
+                  )}
+                  <Text style={styles.price}>
+                    {formatPrice(displayProduct.price)}
+                  </Text>
+                </View>
+                {savings > 0 && (
+                  <View style={styles.savingsBox}>
+                    <Text style={styles.savingsLabel}>{t('savings')}</Text>
+                    <Text style={styles.savingsValue}>
+                      {formatPrice(savings)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Tavsif */}
+              <Text style={styles.sectionHeader}>
+                {t('about_product')}
+              </Text>
+              <Text style={styles.description}>
+                {isRu && displayProduct.description_ru
+                  ? displayProduct.description_ru
+                  : displayProduct.description}
+              </Text>
+
+              {/* Xususiyatlari */}
+              {displayProduct.specs && displayProduct.specs.length > 0 && (
+                <>
+                  <Text style={styles.sectionHeader}>
+                    {t('specs_title')}
+                  </Text>
+                  <View style={styles.specsTable}>
+                    {displayProduct.specs.map((item, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.specRow,
+                          idx % 2 === 1 && styles.specRowAlt,
+                        ]}
+                      >
+                        <Text style={styles.specLabel}>
+                          {isRu && item.label_ru
+                            ? item.label_ru
+                            : item.label}
+                        </Text>
+                        <Text style={styles.specValue}>{item.value}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+
+              {/* Kafolat va yetkazib berish xizmati */}
+              <View style={styles.guaranteeCard}>
+                <View style={styles.guaranteeItem}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={22}
+                    color="#2563EB"
+                  />
+                  <View style={styles.guaranteeTextContainer}>
+                    <Text style={styles.guaranteeTitle}>
+                      {t('guarantee_title')}
+                    </Text>
+                    <Text style={styles.guaranteeSub}>
+                      {t('guarantee_sub')}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.guaranteeItem}>
+                  <Ionicons name="cube" size={22} color="#16A34A" />
+                  <View style={styles.guaranteeTextContainer}>
+                    <Text style={styles.guaranteeTitle}>
+                      {t('delivery_title')}
+                    </Text>
+                    <Text style={styles.guaranteeSub}>
+                      {t('delivery_sub')}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Pastki savatga qo'shish paneli */}
+          <View style={styles.bottomBar}>
+            <View style={styles.stepper}>
+              <TouchableOpacity
+                style={styles.stepperBtn}
+                onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="remove" size={18} color="#0F172A" />
+              </TouchableOpacity>
+              <Text style={styles.stepperValue}>{quantity}</Text>
+              <TouchableOpacity
+                style={styles.stepperBtn}
+                onPress={() => setQuantity((q) => q + 1)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={18} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.addCartBtn}
+              onPress={handleAddToCart}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="cart" size={18} color="#FFFFFF" />
+              <Text style={styles.addCartText}>
+                {t('add_to_cart_btn')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
     </Modal>
   );
 };
