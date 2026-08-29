@@ -57,7 +57,8 @@ export const TRANSLATIONS = {
 
     // Tovar kartochkasi va tafsilotlari
     add_to_cart: 'Savatga',
-    add_to_cart_full: 'Savatga qo\'shish',
+    add_to_cart_full: "Savatga qo'shish",
+    add_to_cart_btn: "Savatga qo'shish",
     discount: 'CHEGIRMA',
     in_stock: 'Omborda mavjud',
     reviews_count: 'ta sharh',
@@ -188,6 +189,7 @@ export const TRANSLATIONS = {
     // Tovar kartochkasi va tafsilotlari
     add_to_cart: 'В корзину',
     add_to_cart_full: 'Добавить в корзину',
+    add_to_cart_btn: 'Добавить в корзину',
     discount: 'СКИДКА',
     in_stock: 'В наличии',
     reviews_count: 'отзывов',

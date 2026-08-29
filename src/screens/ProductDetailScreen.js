@@ -147,7 +147,7 @@ export const ProductDetailScreen = () => {
                 },
               ]}
             >
-              {/* Tutqich va tepadan tortib yopish maydoni (Gesture Area) */}
+              {/* Tutqich va tepadan tortib yopish paneli */}
               <View {...panResponder.panHandlers} style={styles.dragHandleArea}>
                 <View style={styles.handle} />
 
@@ -193,8 +193,15 @@ export const ProductDetailScreen = () => {
                     </TouchableOpacity>
                   </View>
                 </View>
+              </View>
 
-                {/* Rasm (Surib yopish maydoni ichida) */}
+              {/* Barcha ma'lumotlar birgalikda silliq aylanuvchi ScrollView */}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scroll}
+                bounces={true}
+              >
+                {/* Mahsulot Rasmi */}
                 <View style={styles.imageContainer}>
                   <Image
                     source={{ uri: displayProduct.image }}
@@ -208,23 +215,9 @@ export const ProductDetailScreen = () => {
                       </Text>
                     </View>
                   )}
-                  {/* Surish ko'rsatkichi */}
-                  <View style={styles.swipeHintBadge}>
-                    <Ionicons name="chevron-down" size={13} color="#FFFFFF" />
-                    <Text style={styles.swipeHintText}>
-                      {isRu
-                        ? 'Потяните вниз, чтобы закрыть'
-                        : 'Yopish uchun pastga suring'}
-                    </Text>
-                  </View>
                 </View>
-              </View>
 
-              {/* Asosiy ma'lumotlar scroll */}
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scroll}
-              >
+                {/* Mahsulot ma'lumotlari */}
                 <View style={styles.body}>
                   {/* Kategoriya va mavjudlik */}
                   <View style={styles.categoryRatingRow}>
@@ -381,7 +374,9 @@ export const ProductDetailScreen = () => {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="cart" size={18} color="#FFFFFF" />
-                  <Text style={styles.addCartText}>{t('add_to_cart_btn')}</Text>
+                  <Text style={styles.addCartText}>
+                    {t('add_to_cart_btn')}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -452,9 +447,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  scroll: {
+    paddingBottom: 24,
+  },
   imageContainer: {
     width: '100%',
-    height: 250,
+    height: 280,
     backgroundColor: '#F8FAFC',
     position: 'relative',
   },
@@ -475,26 +473,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
-  },
-  swipeHintBadge: {
-    position: 'absolute',
-    top: 10,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  swipeHintText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  scroll: {
-    paddingBottom: 24,
   },
   body: {
     padding: 18,
