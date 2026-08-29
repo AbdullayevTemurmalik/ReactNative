@@ -1,11 +1,12 @@
 {
-  "name": "reactnative",
+  "name": "smartbozor",
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.0",
+    "expo-font": "~57.0.2",
     "expo-location": "~19.0.8",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",

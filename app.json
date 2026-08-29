@@ -26,7 +26,9 @@
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -39,6 +41,11 @@
           "locationAlwaysAndWhenInUsePermission": "SmartBozor buyurtmalaringizni tez va aniq yetkazib berish uchun geolokatsiyangizdan foydalanadi."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b920875c-9c46-4d44-bda7-8aae94235ce1"
+      }
+    }
   }
 }
