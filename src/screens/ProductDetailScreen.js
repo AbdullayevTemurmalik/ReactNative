@@ -47,12 +47,15 @@ export const ProductDetailScreen = () => {
   // Swipe-down pan gesture & slide-in animation
   const panY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const isClosingRef = useRef(false);
+  const touchStartY = useRef(0);
+  const currentScrollY = useRef(0);
 
   useEffect(() => {
     if (selectedProduct) {
       setActiveProduct(selectedProduct);
       setQuantity(1);
       isClosingRef.current = false;
+      currentScrollY.current = 0;
       panY.setValue(SCREEN_HEIGHT);
       Animated.spring(panY, {
         toValue: 0,
@@ -76,15 +79,17 @@ export const ProductDetailScreen = () => {
       panY.setValue(SCREEN_HEIGHT);
       setQuantity(1);
       isClosingRef.current = false;
+      currentScrollY.current = 0;
     });
   };
 
+  // Tutqichdan tortganda ishlaydigan PanResponder
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return (
-          gestureState.dy > 10 &&
+          gestureState.dy > 8 &&
           Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
         );
       },
@@ -94,7 +99,7 @@ export const ProductDetailScreen = () => {
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 70 || gestureState.vy > 0.4) {
+        if (gestureState.dy > 55 || gestureState.vy > 0.35) {
           handleClose();
         } else {
           Animated.spring(panY, {
@@ -107,20 +112,38 @@ export const ProductDetailScreen = () => {
     })
   ).current;
 
-  // Eng tepada turib pastga tortganda oynani yopish
-  const handleScrollEndDrag = (e) => {
-    const offsetY = e.nativeEvent.contentOffset.y;
-    const velocityY = e.nativeEvent.velocity ? e.nativeEvent.velocity.y : 0;
-    if (offsetY < -30 || velocityY < -0.3) {
+  // ScrollView eng tepada bo'lganda pastga tortishni aniqlash (Android va iOS uchun 100% ishlaydi)
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.nativeEvent.pageY;
+  };
+
+  const handleTouchMove = (e) => {
+    const touchY = e.nativeEvent.pageY;
+    const dragDistance = touchY - touchStartY.current;
+
+    // Agar foydalanuvchi sahifaning eng tepasida bo'lsa va pastga tortayotgan bo'lsa
+    if (currentScrollY.current <= 2 && dragDistance > 0) {
+      panY.setValue(dragDistance);
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    const touchY = e.nativeEvent.pageY;
+    const dragDistance = touchY - touchStartY.current;
+
+    if (currentScrollY.current <= 2 && dragDistance > 55) {
       handleClose();
+    } else if (currentScrollY.current <= 2 && dragDistance > 0) {
+      Animated.spring(panY, {
+        toValue: 0,
+        bounciness: 4,
+        useNativeDriver: true,
+      }).start();
     }
   };
 
   const handleScroll = (e) => {
-    const offsetY = e.nativeEvent.contentOffset.y;
-    if (offsetY < -60) {
-      handleClose();
-    }
+    currentScrollY.current = Math.max(0, e.nativeEvent.contentOffset.y);
   };
 
   const handleShare = async () => {
@@ -215,16 +238,17 @@ export const ProductDetailScreen = () => {
             </View>
           </View>
 
-          {/* 100% toza, tepadan pastga tortilganda ham yopiladigan ScrollView */}
+          {/* 100% toza, eng tepaga chiqqanda pastga tortsa avtomatik yopiladigan ScrollView */}
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            bounces={true}
             scrollEventThrottle={16}
             onScroll={handleScroll}
-            onScrollEndDrag={handleScrollEndDrag}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {/* Mahsulot Rasmi */}
             <View style={styles.imageContainer}>
@@ -288,7 +312,7 @@ export const ProductDetailScreen = () => {
                     </Text>
                   )}
                   <Text style={styles.price}>
-                        {formatPrice(displayProduct.price)}
+                    {formatPrice(displayProduct.price)}
                   </Text>
                 </View>
                 {savings > 0 && (
