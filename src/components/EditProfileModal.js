@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { formatPhoneNumber, isPhoneValid, isPasswordStrong } from '../utils/formatters';
+import { formatPhoneNumber, isPhoneValid, isPasswordStrong, getPasswordStrength } from '../utils/formatters';
 
 export const EditProfileModal = ({ visible, onClose }) => {
   const { currentUser, updateProfile, language } = useApp();
@@ -49,7 +49,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
     if (errorMessage) setErrorMessage('');
   };
 
-  const isPassValid = password.length === 0 || isPasswordStrong(password);
+  const passStrength = getPasswordStrength(password);
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -172,7 +172,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                     </View>
                   </View>
 
-                  {/* Telefon raqam (O'zgartiriladigan) */}
+                  {/* Telefon raqam */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>
                       {isRu ? 'Номер телефона' : 'Telefon raqam'}
@@ -206,30 +206,90 @@ export const EditProfileModal = ({ visible, onClose }) => {
 
                   {/* Yangi parol */}
                   <View style={styles.inputGroup}>
-                    <View style={styles.labelRow}>
-                      <Text style={styles.label}>
-                        {isRu ? 'Новый пароль' : 'Yangi parol'}
-                      </Text>
-                    </View>
+                    <Text style={styles.label}>
+                      {isRu ? 'Новый пароль' : 'Yangi parol'}
+                    </Text>
 
-                    {/* Qizil / Yashil Parol Qoidasi Yozuvi */}
-                    {password.length > 0 && !isPasswordStrong(password) && (
-                      <View style={styles.ruleBadgeRed}>
-                        <Ionicons name="alert-circle" size={13} color="#DC2626" />
-                        <Text style={styles.ruleTextRed}>
-                          {isRu
-                            ? 'Минимум 6 символов, 1 буква и 1 цифра'
-                            : "Kamida 6 ta belgi, 1 ta harf va 1 ta raqam bo'lishi shart"}
-                        </Text>
-                      </View>
-                    )}
+                    {/* Jonli Kuchlilik Indikatori (Qizil / Sariq / Ko'k) */}
+                    {password.length > 0 && (
+                      <View
+                        style={[
+                          styles.strengthCard,
+                          {
+                            backgroundColor: passStrength.bgColor,
+                            borderColor: passStrength.color + '35',
+                          },
+                        ]}
+                      >
+                        <View style={styles.strengthTopRow}>
+                          <View style={styles.strengthLabelRow}>
+                            <View
+                              style={[
+                                styles.strengthDot,
+                                { backgroundColor: passStrength.color },
+                              ]}
+                            />
+                            <Text
+                              style={[
+                                styles.strengthTitle,
+                                { color: passStrength.color },
+                              ]}
+                            >
+                              {isRu ? passStrength.label_ru : passStrength.label}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              styles.strengthDesc,
+                              { color: passStrength.color },
+                            ]}
+                          >
+                            {isRu ? passStrength.desc_ru : passStrength.desc}
+                          </Text>
+                        </View>
 
-                    {password.length > 0 && isPasswordStrong(password) && (
-                      <View style={styles.ruleBadgeGreen}>
-                        <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
-                        <Text style={styles.ruleTextGreen}>
-                          {isRu ? 'Надежный пароль' : "Xavfsiz va to'g'ri parol"}
-                        </Text>
+                        {/* 3 qismli rangli progress chizig'i */}
+                        <View style={styles.strengthBarsRow}>
+                          <View
+                            style={[
+                              styles.strengthBar,
+                              {
+                                backgroundColor:
+                                  passStrength.score >= 1
+                                    ? passStrength.score === 1
+                                      ? '#EF4444'
+                                      : passStrength.score === 2
+                                      ? '#F59E0B'
+                                      : '#2563EB'
+                                    : '#E2E8F0',
+                              },
+                            ]}
+                          />
+                          <View
+                            style={[
+                              styles.strengthBar,
+                              {
+                                backgroundColor:
+                                  passStrength.score >= 2
+                                    ? passStrength.score === 2
+                                      ? '#F59E0B'
+                                      : '#2563EB'
+                                    : '#E2E8F0',
+                              },
+                            ]}
+                          />
+                          <View
+                            style={[
+                              styles.strengthBar,
+                              {
+                                backgroundColor:
+                                  passStrength.score >= 3
+                                    ? '#2563EB'
+                                    : '#E2E8F0',
+                              },
+                            ]}
+                          />
+                        </View>
                       </View>
                     )}
 
@@ -244,12 +304,18 @@ export const EditProfileModal = ({ visible, onClose }) => {
                       <Ionicons
                         name="key-outline"
                         size={18}
-                        color={password.length > 0 && !isPasswordStrong(password) ? '#DC2626' : '#64748B'}
+                        color={
+                          password.length > 0
+                            ? passStrength.color
+                            : '#64748B'
+                        }
                         style={styles.inputIcon}
                       />
                       <TextInput
                         style={styles.input}
-                        placeholder={isRu ? 'Введите новый пароль' : 'Yangi parolni kiriting'}
+                        placeholder={
+                          isRu ? 'Введите новый пароль' : 'Yangi parolni kiriting'
+                        }
                         placeholderTextColor="#94A3B8"
                         secureTextEntry={!showPassword}
                         value={password}
@@ -289,12 +355,20 @@ export const EditProfileModal = ({ visible, onClose }) => {
                         <Ionicons
                           name="shield-checkmark-outline"
                           size={18}
-                          color={confirmPassword.length > 0 && confirmPassword !== password ? '#DC2626' : '#64748B'}
+                          color={
+                            confirmPassword.length > 0 && confirmPassword !== password
+                              ? '#DC2626'
+                              : '#64748B'
+                          }
                           style={styles.inputIcon}
                         />
                         <TextInput
                           style={styles.input}
-                          placeholder={isRu ? 'Повторите новый пароль' : 'Yangi parolni qayta kiriting'}
+                          placeholder={
+                            isRu
+                              ? 'Повторите новый пароль'
+                              : 'Yangi parolni qayta kiriting'
+                          }
                           placeholderTextColor="#94A3B8"
                           secureTextEntry={!showConfirmPassword}
                           value={confirmPassword}
@@ -309,7 +383,11 @@ export const EditProfileModal = ({ visible, onClose }) => {
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
                           <Ionicons
-                            name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                            name={
+                              showConfirmPassword
+                                ? 'eye-outline'
+                                : 'eye-off-outline'
+                            }
                             size={18}
                             color="#64748B"
                           />
@@ -432,44 +510,47 @@ const styles = StyleSheet.create({
   inputGroup: {
     gap: 6,
   },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   label: {
     fontSize: 13,
     fontWeight: '700',
     color: '#334155',
   },
-  ruleBadgeRed: {
+  strengthCard: {
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    gap: 8,
+  },
+  strengthTopRow: {
+    gap: 2,
+  },
+  strengthLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 5,
+    gap: 6,
   },
-  ruleTextRed: {
+  strengthDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  strengthTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  strengthDesc: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#DC2626',
+    fontWeight: '600',
+    marginLeft: 14,
+  },
+  strengthBarsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    height: 5,
+  },
+  strengthBar: {
     flex: 1,
-  },
-  ruleBadgeGreen: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 5,
-  },
-  ruleTextGreen: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#16A34A',
+    borderRadius: 3,
   },
   inputWrapper: {
     flexDirection: 'row',

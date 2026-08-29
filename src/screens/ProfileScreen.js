@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -19,6 +20,7 @@ import { NotificationsModal } from '../components/NotificationsModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { OrdersModal } from '../components/OrdersModal';
+import { AvatarPickerModal } from '../components/AvatarPickerModal';
 
 export const ProfileScreen = () => {
   const {
@@ -29,6 +31,7 @@ export const ProfileScreen = () => {
     favorites,
     unreadNotifsCount,
     setActiveTab,
+    updateProfile,
     t,
     language,
   } = useApp();
@@ -44,6 +47,7 @@ export const ProfileScreen = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
   const handleConfirmLogout = () => {
     logout();
@@ -84,18 +88,35 @@ export const ProfileScreen = () => {
           </View>
         ) : (
           <View style={styles.userCard}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {currentUser.name
-                  ? currentUser.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2)
-                  : 'TM'}
-              </Text>
-            </View>
+            <TouchableOpacity
+              style={styles.avatarBtn}
+              onPress={() => setIsAvatarPickerOpen(true)}
+              activeOpacity={0.8}
+            >
+              {currentUser.avatar ? (
+                <Image
+                  source={{ uri: currentUser.avatar }}
+                  style={styles.avatarImg}
+                />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {currentUser.name
+                      ? currentUser.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)
+                      : 'TM'}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.cameraIconBadge}>
+                <Ionicons name="camera" size={11} color="#FFFFFF" />
+              </View>
+            </TouchableOpacity>
+
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{currentUser.name}</Text>
               <Text style={styles.userPhone}>{currentUser.phone}</Text>
@@ -336,6 +357,14 @@ export const ProfileScreen = () => {
       <NotificationsModal visible={isNotifsOpen} onClose={() => setIsNotifsOpen(false)} />
       <EditProfileModal visible={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
       <OrdersModal visible={isOrdersOpen} onClose={() => setIsOrdersOpen(false)} />
+      <AvatarPickerModal
+        visible={isAvatarPickerOpen}
+        onClose={() => setIsAvatarPickerOpen(false)}
+        currentAvatar={currentUser?.avatar}
+        onSelectAvatar={(url) =>
+          updateProfile(currentUser?.name, null, currentUser?.phone, url)
+        }
+      />
       
       {/* CHIQISHNI TASDIQLASH */}
       <ConfirmModal
@@ -429,6 +458,16 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     marginBottom: 16,
   },
+  avatarBtn: {
+    position: 'relative',
+  },
+  avatarImg: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 2,
+    borderColor: '#2563EB',
+  },
   avatar: {
     width: 54,
     height: 54,
@@ -436,6 +475,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cameraIconBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   avatarText: {
     color: '#FFFFFF',

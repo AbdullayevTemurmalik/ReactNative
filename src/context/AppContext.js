@@ -358,9 +358,9 @@ export const AppProvider = ({ children }) => {
     [users, language, showToast, t, pendingAction]
   );
 
-  // Profil ma'lumotlarini (Ism, Parol, Telefon) yangilash
+  // Profil ma'lumotlarini (Ism, Parol, Telefon, Rasm) yangilash
   const updateProfile = useCallback(
-    (name, newPassword, newPhone) => {
+    (name, newPassword, newPhone, avatar) => {
       if (!currentUser || currentUser.isGuest) {
         return {
           success: false,
@@ -378,6 +378,7 @@ export const AppProvider = ({ children }) => {
         ...currentUser,
         name: cleanName,
         phone: cleanPhone,
+        avatar: avatar !== undefined ? avatar : currentUser.avatar,
       };
 
       if (newPassword && newPassword.trim()) {
