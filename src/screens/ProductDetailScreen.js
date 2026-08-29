@@ -147,11 +147,10 @@ export const ProductDetailScreen = () => {
                 },
               ]}
             >
-              {/* Tutqich va tepadan tortib yopish paneli */}
+              {/* Tutqich va yuqori navigatsiya paneli */}
               <View {...panResponder.panHandlers} style={styles.dragHandleArea}>
                 <View style={styles.handle} />
 
-                {/* Yuqori navigatsiya paneli */}
                 <View style={styles.topNav}>
                   <TouchableOpacity
                     style={styles.navBtn}
@@ -197,8 +196,11 @@ export const ProductDetailScreen = () => {
 
               {/* Barcha ma'lumotlar birgalikda silliq aylanuvchi ScrollView */}
               <ScrollView
-                showsVerticalScrollIndicator={false}
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={true}
                 contentContainerStyle={styles.scroll}
+                nestedScrollEnabled={true}
+                keyboardShouldPersistTaps="handled"
                 bounces={true}
               >
                 {/* Mahsulot Rasmi */}
@@ -447,8 +449,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
   scroll: {
-    paddingBottom: 24,
+    paddingBottom: 30,
   },
   imageContainer: {
     width: '100%',
