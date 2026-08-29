@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -45,7 +46,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Galereyadan (qurilmadan) rasm tanlash (Maksimal 5 MB)
+  // Galereyadan rasm tanlash
   const handlePickFromGallery = async () => {
     try {
       setIsLoading(true);
@@ -71,7 +72,6 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
 
-        // 5 MB hajm tekshiruvi
         if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE_BYTES) {
           Alert.alert(
             isRu ? 'Файл слишком большой' : 'Fayl hajmi juda katta',
@@ -101,7 +101,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
     }
   };
 
-  // Kamera orqali rasmga olish (Maksimal 5 MB)
+  // Kamera orqali rasmga olish
   const handleTakePhoto = async () => {
     try {
       setIsLoading(true);
@@ -181,13 +181,13 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
     <Modal
       visible={visible}
       transparent={true}
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.container}>
+            <View style={styles.card}>
               {/* Header */}
               <View style={styles.header}>
                 <View style={styles.titleRow}>
@@ -205,7 +205,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                   activeOpacity={0.7}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close" size={22} color="#64748B" />
+                  <Ionicons name="close" size={20} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
@@ -238,17 +238,17 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                     ) : (
                       <>
                         <View style={styles.actionIconCircle}>
-                          <Ionicons name="images" size={22} color="#2563EB" />
+                          <Ionicons name="images" size={20} color="#2563EB" />
                         </View>
                         <View style={styles.actionTextCol}>
                           <Text style={styles.galleryBtnTitle}>
-                            {isRu ? 'Выбрать из галереи' : 'Galereyadan tanlash'}
+                            {isRu ? 'Из галереи' : 'Galereyadan'}
                           </Text>
                           <Text style={styles.galleryBtnSub}>
-                            {isRu ? 'PNG, JPG до 5 МБ' : 'Istalgan rasm (5 MB gacha)'}
+                            {isRu ? 'до 5 МБ' : '5 MB gacha'}
                           </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+                        <Ionicons name="chevron-forward" size={16} color="#2563EB" />
                       </>
                     )}
                   </TouchableOpacity>
@@ -260,7 +260,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                     activeOpacity={0.85}
                   >
                     <View style={styles.cameraIconCircle}>
-                      <Ionicons name="camera" size={20} color="#16A34A" />
+                      <Ionicons name="camera" size={18} color="#16A34A" />
                     </View>
                     <Text style={styles.cameraBtnText}>
                       {isRu ? 'Камера' : 'Kamera'}
@@ -289,10 +289,12 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                         onPress={() => handleSelectEmoji(item.emoji)}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.emojiChar}>{item.emoji}</Text>
+                        <View style={styles.emojiCenterBox}>
+                          <Text style={styles.emojiChar}>{item.emoji}</Text>
+                        </View>
                         {isSelected && (
                           <View style={styles.checkBadge}>
-                            <Ionicons name="checkmark-circle" size={16} color="#2563EB" />
+                            <Ionicons name="checkmark-circle" size={14} color="#2563EB" />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -300,14 +302,14 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                   })}
                 </View>
 
-                {/* 3. Standart holatga qaytarish (agar rasm bor bo'lsa) */}
+                {/* 3. Standart holatga qaytarish */}
                 {currentAvatar ? (
                   <TouchableOpacity
                     style={styles.resetBtn}
                     onPress={handleResetAvatar}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                    <Ionicons name="trash-outline" size={15} color="#EF4444" />
                     <Text style={styles.resetBtnText}>
                       {isRu ? 'Удалить аватар' : "Rasmni o'chirish"}
                     </Text>
@@ -326,58 +328,61 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
-  container: {
+  card: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 380,
     maxHeight: '85%',
-    paddingBottom: 24,
+    padding: 18,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 20,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   iconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 16.5,
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   scroll: {
-    padding: 20,
-    gap: 14,
+    paddingTop: 12,
+    paddingBottom: 6,
+    gap: 12,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -385,7 +390,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '800',
     color: '#334155',
   },
@@ -393,126 +398,141 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F0FDF4',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
     gap: 4,
   },
   sizeLimitText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
     color: '#16A34A',
   },
   actionButtonsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   galleryBtn: {
     flex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#EFF6FF',
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 16,
+    padding: 10,
     borderWidth: 1.5,
     borderColor: '#BFDBFE',
-    gap: 10,
+    gap: 8,
   },
   actionIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
     elevation: 2,
   },
   actionTextCol: {
     flex: 1,
   },
   galleryBtnTitle: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '800',
     color: '#1E40AF',
   },
   galleryBtnSub: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#60A5FA',
-    marginTop: 2,
+    marginTop: 1,
   },
   cameraBtn: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F0FDF4',
-    borderRadius: 18,
-    padding: 12,
+    borderRadius: 16,
+    padding: 10,
     borderWidth: 1.5,
     borderColor: '#BBF7D0',
     gap: 6,
   },
   cameraIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   cameraBtnText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '800',
     color: '#15803D',
   },
   emojiSectionHeader: {
-    marginTop: 8,
+    marginTop: 4,
   },
   emojiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     justifyContent: 'space-between',
   },
   emojiItem: {
-    width: '18%',
+    width: '17.5%',
     aspectRatio: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
     position: 'relative',
   },
   emojiItemSelected: {
-    borderWidth: 3,
+    borderWidth: 2.5,
     borderColor: '#2563EB',
   },
+  emojiCenterBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
   emojiChar: {
-    fontSize: 26,
+    fontSize: 22,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    ...Platform.select({
+      android: {
+        marginTop: 0,
+      },
+    }),
   },
   checkBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    borderRadius: 7,
   },
   resetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
     backgroundColor: '#FEF2F2',
     gap: 6,
-    marginTop: 6,
+    marginTop: 4,
   },
   resetBtnText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
     color: '#EF4444',
   },

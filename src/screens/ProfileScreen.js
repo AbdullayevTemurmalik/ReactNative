@@ -494,6 +494,9 @@ const styles = StyleSheet.create({
   },
   emojiAvatarText: {
     fontSize: 28,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   cameraIconBadge: {
     position: 'absolute',
