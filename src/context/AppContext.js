@@ -32,6 +32,18 @@ const DEFAULT_ADDRESSES = [
   },
 ];
 
+const DEFAULT_NOTIFICATIONS = [
+  {
+    id: 'notif-welcome',
+    title: 'SmartBozor ga xush kelibsiz! 🎉',
+    body: "Eng yaxshi chegirmalar va yangi mahsulotlar bilan tanishing. Xaridingiz maroqli bo'lsin!",
+    title_ru: 'Добро пожаловать в SmartBozor! 🎉',
+    body_ru: 'Ознакомьтесь с лучшими скидками и новинками. Приятных покупок!',
+    time: new Date().toISOString(),
+    read: false,
+  },
+];
+
 const INITIAL_USERS = [
   {
     id: 'user-default',
