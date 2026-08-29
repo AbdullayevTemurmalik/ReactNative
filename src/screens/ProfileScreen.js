@@ -18,6 +18,7 @@ import { SupportModal } from '../components/SupportModal';
 import { NotificationsModal } from '../components/NotificationsModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { EditProfileModal } from '../components/EditProfileModal';
+import { OrdersModal } from '../components/OrdersModal';
 
 export const ProfileScreen = () => {
   const {
@@ -42,6 +43,7 @@ export const ProfileScreen = () => {
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
 
   const handleConfirmLogout = () => {
     logout();
@@ -136,6 +138,7 @@ export const ProfileScreen = () => {
         <View style={styles.statsCard}>
           <TouchableOpacity
             style={styles.statItem}
+            onPress={() => setIsOrdersOpen(true)}
             activeOpacity={0.7}
           >
             <View style={styles.statIconRow}>
@@ -166,24 +169,45 @@ export const ProfileScreen = () => {
 
         {/* MENING BUYURTMALARIM BO'LIMI */}
         <View style={styles.ordersSection}>
-          <Text style={styles.sectionTitle}>{t('my_orders_title')}</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>{t('my_orders_title')}</Text>
+            {orders.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setIsOrdersOpen(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAllText}>
+                  {isRu ? 'Все заказы' : "Barchasi"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {orders.length === 0 ? (
-            <View style={styles.noOrdersCard}>
+            <TouchableOpacity
+              style={styles.noOrdersCard}
+              onPress={() => setIsOrdersOpen(true)}
+              activeOpacity={0.7}
+            >
               <Ionicons name="receipt-outline" size={36} color="#94A3B8" />
               <Text style={styles.noOrdersText}>{t('no_orders')}</Text>
-            </View>
+            </TouchableOpacity>
           ) : (
             <View style={styles.ordersList}>
-              {orders.map((order) => (
-                <View key={order.id} style={styles.orderCard}>
+              {orders.slice(0, 3).map((order) => (
+                <TouchableOpacity
+                  key={order.id}
+                  style={styles.orderCard}
+                  onPress={() => setIsOrdersOpen(true)}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.orderHeader}>
                     <View>
-                      <Text style={styles.orderId}>{order.id}</Text>
+                      <Text style={styles.orderId}>#{order.id}</Text>
                       <Text style={styles.orderDate}>
                         {new Date(order.date).toLocaleDateString(isRu ? 'ru-RU' : 'uz-UZ', {
                           day: 'numeric',
-                          month: 'long',
+                          month: 'short',
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
@@ -196,11 +220,11 @@ export const ProfileScreen = () => {
 
                   <View style={styles.orderItemsPreview}>
                     <Text style={styles.orderItemsCount}>
-                      {order.items.length} {t('items_count')} ({order.items.reduce((s, i) => s + i.quantity, 0)} dona)
+                      {order.items?.length || 0} {t('items_count')} ({order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0} dona)
                     </Text>
                     <Text style={styles.orderTotal}>{formatPrice(order.totalAmount)}</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}
@@ -211,6 +235,23 @@ export const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>{t('settings_title')}</Text>
 
           <View style={styles.menuCard}>
+            {/* Buyurtmalarim menyusi */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => setIsOrdersOpen(true)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBg, { backgroundColor: '#2563EB15' }]}>
+                <Ionicons name="receipt-outline" size={20} color="#2563EB" />
+              </View>
+              <Text style={styles.menuItemLabel}>{t('my_orders_title')}</Text>
+              {orders.length > 0 && (
+                <View style={styles.menuOrdersBadge}>
+                  <Text style={styles.menuOrdersBadgeText}>{orders.length}</Text>
+                </View>
+              )}
+              <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
             {/* Manzillarim */}
             <TouchableOpacity
               style={styles.menuItem}
@@ -305,6 +346,7 @@ export const ProfileScreen = () => {
       <SupportModal visible={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
       <NotificationsModal visible={isNotifsOpen} onClose={() => setIsNotifsOpen(false)} />
       <EditProfileModal visible={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
+      <OrdersModal visible={isOrdersOpen} onClose={() => setIsOrdersOpen(false)} />
       
       {/* CHIQISHNI TASDIQLASH */}
       <ConfirmModal
@@ -514,7 +556,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 10,
+  },
+  seeAllText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  menuOrdersBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginRight: 6,
+  },
+  menuOrdersBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#2563EB',
   },
   ordersSection: {
     marginBottom: 20,
