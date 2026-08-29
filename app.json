@@ -13,7 +13,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.temurmalik.shopapp"
+      "bundleIdentifier": "com.temurmalik.shopapp",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "SmartBozor profil rasmingizni yuklash uchun galereyangizdan foydalanadi.",
+        "NSCameraUsageDescription": "SmartBozor profil rasmingizni olish uchun kameradan foydalanadi."
+      }
     },
     "android": {
       "package": "com.temurmalik.shopapp",
@@ -26,7 +30,11 @@
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "CAMERA"
       ]
     },
     "web": {
@@ -37,6 +45,13 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "SmartBozor buyurtmalaringizni tez va aniq yetkazib berish uchun geolokatsiyangizdan foydalanadi."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SmartBozor profil rasmingizni yuklash uchun galereyangizdan foydalanadi.",
+          "cameraPermission": "SmartBozor profil rasmingizni olish uchun kameradan foydalanadi."
         }
       ]
     ],
