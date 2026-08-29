@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Updates from 'expo-updates';
 import { PRODUCTS } from '../data/products';
 import { TRANSLATIONS } from '../utils/translations';
 import { formatPhoneNumber } from '../utils/formatters';
@@ -237,6 +238,38 @@ export const AppProvider = ({ children }) => {
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  // EAS OTA Updates qo'lda tekshirish funksiyasi
+  const checkForUpdates = async (showFeedback = true) => {
+    try {
+      if (__DEV__) {
+        if (showFeedback) {
+          showToast(language === 'ru' ? '🛠️ В режиме разработки обновления отключены' : '🛠️ Dasturlash (Dev) rejimida yangilanishlar tekshirilmaydi', 'info');
+        }
+        return;
+      }
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        if (showFeedback) {
+          showToast(language === 'ru' ? '📥 Загружается новая версия...' : '📥 Yangi versiya yuklanmoqda...', 'info');
+        }
+        await Updates.fetchUpdateAsync();
+        if (showFeedback) {
+          showToast(language === 'ru' ? '✨ Новая версия установлена! Перезагрузка...' : '✨ Yangi versiya o\'rnatildi! Qayta ishga tushirilmoqda...', 'success');
+        }
+        await Updates.reloadAsync();
+      } else {
+        if (showFeedback) {
+          showToast(language === 'ru' ? '✅ У вас установлена последняя версия!' : '✅ Siz eng so\'nggi versiyadasiz!', 'success');
+        }
+      }
+    } catch (error) {
+      console.log('Update check error:', error);
+      if (showFeedback) {
+        showToast(language === 'ru' ? '⚠️ Ошибка при проверке обновлений' : '⚠️ Yangilanishlarni tekshirishda xatolik yuz berdi', 'error');
+      }
     }
   };
 
@@ -792,6 +825,7 @@ export const AppProvider = ({ children }) => {
     logout,
     updateProfile,
     checkAuthAndRun,
+    checkForUpdates,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

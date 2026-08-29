@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import * as Updates from 'expo-updates';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 
@@ -25,6 +26,22 @@ function MainNavigator() {
     isAuthModalVisible,
     setIsAuthModalVisible,
   } = useApp();
+
+  // Fonda xavfsiz OTA yangilanishini yuklab qo'yish (qayta yuklamasdan, keyingi kirishda silliq ishga tushadi)
+  useEffect(() => {
+    async function checkBackgroundUpdates() {
+      if (__DEV__) return;
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+        }
+      } catch (error) {
+        // Xatolik bo'lsa ham ilova ochilishiga xalaqit bermaydi
+      }
+    }
+    checkBackgroundUpdates();
+  }, []);
 
   if (isInitializing) {
     return <SplashScreen />;

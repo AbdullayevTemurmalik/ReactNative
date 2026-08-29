@@ -32,6 +32,7 @@ export const ProfileScreen = () => {
     unreadNotifsCount,
     setActiveTab,
     updateProfile,
+    checkForUpdates,
     t,
     language,
   } = useApp();
@@ -348,11 +349,29 @@ export const ProfileScreen = () => {
               </View>
               <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
             </TouchableOpacity>
+
+            {/* Yangilanishlarni tekshirish (OTA Updates) */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => checkForUpdates(true)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBg, { backgroundColor: '#2563EB15' }]}>
+                <Ionicons name="cloud-download-outline" size={20} color="#2563EB" />
+              </View>
+              <Text style={styles.menuItemLabel}>
+                {isRu ? 'Проверить обновления' : 'Yangilanishlarni tekshirish'}
+              </Text>
+              <View style={styles.otaBadge}>
+                <Text style={styles.otaBadgeText}>OTA</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
           </View>
         </View>
 
         {/* Versiya */}
-        <Text style={styles.versionText}>SmartBozor Mobile v1.0.0 (Expo SDK 54)</Text>
+        <Text style={styles.versionText}>SmartBozor Mobile v1.20.0 (Expo SDK 54)</Text>
       </ScrollView>
 
       {/* MODALLAR */}
@@ -793,6 +812,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#15803D',
+  },
+  otaBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  otaBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#2563EB',
   },
   versionText: {
     fontSize: 11,
