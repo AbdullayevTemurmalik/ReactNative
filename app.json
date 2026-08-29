@@ -13,10 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.smartbozor.app"
+      "bundleIdentifier": "com.temurmalik.shopapp"
     },
     "android": {
-      "package": "com.smartbozor.app",
+      "package": "com.temurmalik.shopapp",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#2563EB",
@@ -26,9 +26,7 @@
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION"
       ]
     },
     "web": {

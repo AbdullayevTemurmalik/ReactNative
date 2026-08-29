@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AppProvider, useApp } from './src/context/AppContext';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 // Screens
 import { SplashScreen } from './src/screens/SplashScreen';
@@ -62,11 +63,13 @@ function MainNavigator() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AppProvider>
-        <MainNavigator />
-      </AppProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <AppProvider>
+          <MainNavigator />
+        </AppProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 
