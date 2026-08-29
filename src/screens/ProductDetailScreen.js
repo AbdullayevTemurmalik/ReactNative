@@ -29,39 +29,54 @@ export const ProductDetailScreen = () => {
     t,
     language,
   } = useApp();
+
   const [quantity, setQuantity] = useState(1);
-  const [isAtTop, setIsAtTop] = useState(true);
+  const [activeProduct, setActiveProduct] = useState(null);
 
   const isRu = language === 'ru';
-  const favorite = selectedProduct ? isFavorite(selectedProduct.id) : false;
-  const discount = selectedProduct
-    ? getDiscountPercent(selectedProduct.oldPrice, selectedProduct.price)
+  const displayProduct = selectedProduct || activeProduct;
+
+  const favorite = displayProduct ? isFavorite(displayProduct.id) : false;
+  const discount = displayProduct
+    ? getDiscountPercent(displayProduct.oldPrice, displayProduct.price)
     : 0;
   const savings =
-    selectedProduct && selectedProduct.oldPrice
-      ? selectedProduct.oldPrice - selectedProduct.price
+    displayProduct && displayProduct.oldPrice
+      ? displayProduct.oldPrice - displayProduct.price
       : 0;
 
-  // Swipe-down pan gesture
-  const panY = useRef(new Animated.Value(0)).current;
+  // Swipe-down pan gesture & slide-in animation
+  const panY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const isClosingRef = useRef(false);
 
   useEffect(() => {
     if (selectedProduct) {
-      panY.setValue(0);
+      setActiveProduct(selectedProduct);
       setQuantity(1);
-      setIsAtTop(true);
+      isClosingRef.current = false;
+      panY.setValue(SCREEN_HEIGHT);
+      Animated.spring(panY, {
+        toValue: 0,
+        bounciness: 0,
+        speed: 18,
+        useNativeDriver: true,
+      }).start();
     }
   }, [selectedProduct]);
 
   const handleClose = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     Animated.timing(panY, {
       toValue: SCREEN_HEIGHT,
       duration: 180,
       useNativeDriver: true,
     }).start(() => {
       setSelectedProduct(null);
-      panY.setValue(0);
+      setActiveProduct(null);
+      panY.setValue(SCREEN_HEIGHT);
       setQuantity(1);
+      isClosingRef.current = false;
     });
   };
 
@@ -69,7 +84,10 @@ export const ProductDetailScreen = () => {
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return gestureState.dy > 8 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        return (
+          gestureState.dy > 8 &&
+          Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+        );
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
@@ -78,15 +96,7 @@ export const ProductDetailScreen = () => {
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dy > 65 || gestureState.vy > 0.35) {
-          Animated.timing(panY, {
-            toValue: SCREEN_HEIGHT,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(() => {
-            setSelectedProduct(null);
-            panY.setValue(0);
-            setQuantity(1);
-          });
+          handleClose();
         } else {
           Animated.spring(panY, {
             toValue: 0,
@@ -99,11 +109,11 @@ export const ProductDetailScreen = () => {
   ).current;
 
   const handleShare = async () => {
-    if (!selectedProduct) return;
+    if (!displayProduct) return;
     try {
       await Share.share({
-        message: `${selectedProduct.name} - ${formatPrice(
-          selectedProduct.price
+        message: `${displayProduct.name} - ${formatPrice(
+          displayProduct.price
         )} SmartBozor!`,
       });
     } catch (error) {
@@ -112,18 +122,18 @@ export const ProductDetailScreen = () => {
   };
 
   const handleAddToCart = () => {
-    if (!selectedProduct) return;
-    addToCart(selectedProduct, quantity);
+    if (!displayProduct) return;
+    addToCart(displayProduct, quantity);
     handleClose();
   };
 
-  if (!selectedProduct) return null;
+  if (!selectedProduct && !activeProduct) return null;
 
   return (
     <Modal
-      visible={!!selectedProduct}
+      visible={!!selectedProduct || !!activeProduct}
       transparent={true}
-      animationType="fade"
+      animationType="none"
       onRequestClose={handleClose}
     >
       <TouchableWithoutFeedback onPress={handleClose}>
@@ -153,7 +163,7 @@ export const ProductDetailScreen = () => {
                   </TouchableOpacity>
 
                   <Text style={styles.navTitle} numberOfLines={1}>
-                    {selectedProduct.name}
+                    {displayProduct.name}
                   </Text>
 
                   <View style={styles.navActions}>
@@ -171,7 +181,7 @@ export const ProductDetailScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.navBtn}
-                      onPress={() => toggleFavorite(selectedProduct.id)}
+                      onPress={() => toggleFavorite(displayProduct.id)}
                       activeOpacity={0.7}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
@@ -187,7 +197,7 @@ export const ProductDetailScreen = () => {
                 {/* Rasm (Surib yopish maydoni ichida) */}
                 <View style={styles.imageContainer}>
                   <Image
-                    source={{ uri: selectedProduct.image }}
+                    source={{ uri: displayProduct.image }}
                     style={styles.image}
                     resizeMode="cover"
                   />
@@ -202,7 +212,9 @@ export const ProductDetailScreen = () => {
                   <View style={styles.swipeHintBadge}>
                     <Ionicons name="chevron-down" size={13} color="#FFFFFF" />
                     <Text style={styles.swipeHintText}>
-                      {isRu ? 'Потяните вниз, чтобы закрыть' : 'Yopish uchun pastga suring'}
+                      {isRu
+                        ? 'Потяните вниз, чтобы закрыть'
+                        : 'Yopish uchun pastga suring'}
                     </Text>
                   </View>
                 </View>
@@ -212,18 +224,13 @@ export const ProductDetailScreen = () => {
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scroll}
-                scrollEventThrottle={16}
-                onScroll={(e) => {
-                  const offsetY = e.nativeEvent.contentOffset.y;
-                  setIsAtTop(offsetY <= 5);
-                }}
               >
                 <View style={styles.body}>
                   {/* Kategoriya va mavjudlik */}
                   <View style={styles.categoryRatingRow}>
                     <View style={styles.categoryTag}>
                       <Text style={styles.categoryText}>
-                        {t(selectedProduct.categoryKey || 'cat_all')}
+                        {t(displayProduct.categoryKey || 'cat_all')}
                       </Text>
                     </View>
                     <View style={styles.stockBadge}>
@@ -237,16 +244,16 @@ export const ProductDetailScreen = () => {
                   </View>
 
                   {/* Mahsulot nomi */}
-                  <Text style={styles.title}>{selectedProduct.name}</Text>
+                  <Text style={styles.title}>{displayProduct.name}</Text>
 
                   {/* Reyting qatori */}
                   <View style={styles.ratingSection}>
                     <Ionicons name="star" size={16} color="#F59E0B" />
                     <Text style={styles.ratingScore}>
-                      {selectedProduct.rating}
+                      {displayProduct.rating}
                     </Text>
                     <Text style={styles.ratingCount}>
-                      ({selectedProduct.reviewsCount} {t('reviews_count')})
+                      ({displayProduct.reviewsCount} {t('reviews_count')})
                     </Text>
                     <Text style={styles.dotSeparator}>•</Text>
                     <Text style={styles.soldText}>
@@ -257,13 +264,13 @@ export const ProductDetailScreen = () => {
                   {/* Narx qatori */}
                   <View style={styles.priceCard}>
                     <View>
-                      {selectedProduct.oldPrice && (
+                      {displayProduct.oldPrice && (
                         <Text style={styles.oldPrice}>
-                          {formatPrice(selectedProduct.oldPrice)}
+                          {formatPrice(displayProduct.oldPrice)}
                         </Text>
                       )}
                       <Text style={styles.price}>
-                        {formatPrice(selectedProduct.price)}
+                        {formatPrice(displayProduct.price)}
                       </Text>
                     </View>
                     {savings > 0 && (
@@ -281,19 +288,19 @@ export const ProductDetailScreen = () => {
                     {t('about_product')}
                   </Text>
                   <Text style={styles.description}>
-                    {isRu && selectedProduct.description_ru
-                      ? selectedProduct.description_ru
-                      : selectedProduct.description}
+                    {isRu && displayProduct.description_ru
+                      ? displayProduct.description_ru
+                      : displayProduct.description}
                   </Text>
 
                   {/* Xususiyatlari */}
-                  {selectedProduct.specs && selectedProduct.specs.length > 0 && (
+                  {displayProduct.specs && displayProduct.specs.length > 0 && (
                     <>
                       <Text style={styles.sectionHeader}>
                         {t('specs_title')}
                       </Text>
                       <View style={styles.specsTable}>
-                        {selectedProduct.specs.map((item, idx) => (
+                        {displayProduct.specs.map((item, idx) => (
                           <View
                             key={idx}
                             style={[
