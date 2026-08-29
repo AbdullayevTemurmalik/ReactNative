@@ -1,23 +1,4 @@
-// Safeguard global.window and global.location for Fast Refresh / HMR on native platforms
-if (typeof global !== 'undefined') {
-  const defaultLocation = {
-    protocol: 'http:',
-    host: 'localhost:8081',
-    hostname: 'localhost',
-    href: 'http://localhost:8081',
-    pathname: '/',
-    search: '',
-    origin: 'http://localhost:8081',
-  };
-
-  if (!global.location) {
-    global.location = defaultLocation;
-  }
-  if (global.window && !global.window.location) {
-    global.window.location = defaultLocation;
-  }
-}
-
+import './src/utils/polyfills';
 import { registerRootComponent } from 'expo';
 import App from './App';
 

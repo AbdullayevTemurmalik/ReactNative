@@ -1,25 +1,4 @@
-// Polyfill global.location & window.location for React Native Fast Refresh / HMR stability
-if (typeof global !== 'undefined') {
-  const defaultLoc = {
-    protocol: 'http:',
-    host: 'localhost:8081',
-    hostname: 'localhost',
-    href: 'http://localhost:8081',
-    pathname: '/',
-    search: '',
-    origin: 'http://localhost:8081',
-  };
-  if (!global.location) {
-    global.location = defaultLoc;
-  }
-  if (!global.window) {
-    global.window = global;
-  }
-  if (!global.window.location) {
-    global.window.location = defaultLoc;
-  }
-}
-
+import './src/utils/polyfills';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
