@@ -51,3 +51,11 @@ export const isPhoneValid = (phone) => {
   const digits = phone.replace(/\D/g, '');
   return digits.length >= 9;
 };
+
+// Kuchli parol tekshiruvi (kamida 6 ta belgi, 1 ta harf va 1 ta raqam)
+export const isPasswordStrong = (pass) => {
+  if (!pass || pass.length < 6) return false;
+  const hasLetter = /[a-zA-Z]/.test(pass);
+  const hasDigit = /[0-9]/.test(pass);
+  return hasLetter && hasDigit;
+};

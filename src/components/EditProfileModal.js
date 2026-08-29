@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { formatPhoneNumber, isPhoneValid } from '../utils/formatters';
+import { formatPhoneNumber, isPhoneValid, isPasswordStrong } from '../utils/formatters';
 
 export const EditProfileModal = ({ visible, onClose }) => {
   const { currentUser, updateProfile, language } = useApp();
@@ -49,6 +49,8 @@ export const EditProfileModal = ({ visible, onClose }) => {
     if (errorMessage) setErrorMessage('');
   };
 
+  const isPassValid = password.length === 0 || isPasswordStrong(password);
+
   const handleSave = () => {
     if (!name.trim()) {
       setErrorMessage(isRu ? 'Введите имя' : 'Ismingizni kiriting');
@@ -65,11 +67,11 @@ export const EditProfileModal = ({ visible, onClose }) => {
     }
 
     if (password) {
-      if (password.length < 4) {
+      if (!isPasswordStrong(password)) {
         setErrorMessage(
           isRu
-            ? 'Пароль должен содержать не менее 4 символов'
-            : "Parol kamida 4 ta belgidan iborat bo'lishi kerak"
+            ? '⚠️ Пароль должен содержать минимум 6 символов, 1 букву и 1 цифру'
+            : "⚠️ Parol kamida 6 ta belgi, 1 ta harf va 1 ta raqamdan iborat bo'lishi shart"
         );
         return;
       }
@@ -204,14 +206,45 @@ export const EditProfileModal = ({ visible, onClose }) => {
 
                   {/* Yangi parol */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>
-                      {isRu ? 'Новый пароль' : 'Yangi parol'}
-                    </Text>
-                    <View style={styles.inputWrapper}>
+                    <View style={styles.labelRow}>
+                      <Text style={styles.label}>
+                        {isRu ? 'Новый пароль' : 'Yangi parol'}
+                      </Text>
+                    </View>
+
+                    {/* Qizil / Yashil Parol Qoidasi Yozuvi */}
+                    {password.length > 0 && !isPasswordStrong(password) && (
+                      <View style={styles.ruleBadgeRed}>
+                        <Ionicons name="alert-circle" size={13} color="#DC2626" />
+                        <Text style={styles.ruleTextRed}>
+                          {isRu
+                            ? 'Минимум 6 символов, 1 буква и 1 цифра'
+                            : "Kamida 6 ta belgi, 1 ta harf va 1 ta raqam bo'lishi shart"}
+                        </Text>
+                      </View>
+                    )}
+
+                    {password.length > 0 && isPasswordStrong(password) && (
+                      <View style={styles.ruleBadgeGreen}>
+                        <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
+                        <Text style={styles.ruleTextGreen}>
+                          {isRu ? 'Надежный пароль' : "Xavfsiz va to'g'ri parol"}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View
+                      style={[
+                        styles.inputWrapper,
+                        password.length > 0 && !isPasswordStrong(password)
+                          ? styles.inputError
+                          : null,
+                      ]}
+                    >
                       <Ionicons
                         name="key-outline"
                         size={18}
-                        color="#64748B"
+                        color={password.length > 0 && !isPasswordStrong(password) ? '#DC2626' : '#64748B'}
                         style={styles.inputIcon}
                       />
                       <TextInput
@@ -245,11 +278,18 @@ export const EditProfileModal = ({ visible, onClose }) => {
                       <Text style={styles.label}>
                         {isRu ? 'Подтвердите пароль' : 'Parolni tasdiqlang'}
                       </Text>
-                      <View style={styles.inputWrapper}>
+                      <View
+                        style={[
+                          styles.inputWrapper,
+                          confirmPassword.length > 0 && confirmPassword !== password
+                            ? styles.inputError
+                            : null,
+                        ]}
+                      >
                         <Ionicons
                           name="shield-checkmark-outline"
                           size={18}
-                          color="#64748B"
+                          color={confirmPassword.length > 0 && confirmPassword !== password ? '#DC2626' : '#64748B'}
                           style={styles.inputIcon}
                         />
                         <TextInput
@@ -392,10 +432,44 @@ const styles = StyleSheet.create({
   inputGroup: {
     gap: 6,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   label: {
     fontSize: 13,
     fontWeight: '700',
     color: '#334155',
+  },
+  ruleBadgeRed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 5,
+  },
+  ruleTextRed: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#DC2626',
+    flex: 1,
+  },
+  ruleBadgeGreen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 5,
+  },
+  ruleTextGreen: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#16A34A',
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -406,6 +480,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
+  },
+  inputError: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FFF5F5',
   },
   inputIcon: {
     marginRight: 10,

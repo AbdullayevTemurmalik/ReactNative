@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { formatPhoneNumber, isPhoneValid } from '../utils/formatters';
+import { formatPhoneNumber, isPhoneValid, isPasswordStrong } from '../utils/formatters';
 
 export const AuthModal = ({ visible, onClose }) => {
   const { login, register, continueAsGuest, t, language, showToast } = useApp();
@@ -88,8 +88,12 @@ export const AuthModal = ({ visible, onClose }) => {
       setErrorMessage(isRu ? 'Введите полный номер телефона' : 'Telefon raqamini to\'liq kiriting (+998 90 123 45 67)');
       return;
     }
-    if (!regPassword || regPassword.length < 6) {
-      setErrorMessage(isRu ? 'Пароль должен содержать минимум 6 символов' : 'Parol kamida 6 ta belgidan iborat bo\'lishi shart');
+    if (!isPasswordStrong(regPassword)) {
+      setErrorMessage(
+        isRu
+          ? '⚠️ Пароль должен содержать минимум 6 символов, 1 букву и 1 цифру'
+          : "⚠️ Parol kamida 6 ta belgi, 1 ta harf va 1 ta raqamdan iborat bo'lishi shart"
+      );
       return;
     }
     if (regPassword !== regConfirmPassword) {
