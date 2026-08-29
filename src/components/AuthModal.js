@@ -80,8 +80,8 @@ export const AuthModal = ({ visible, onClose }) => {
 
   // Ro'yxatdan o'tish funksiyasi
   const handleRegister = () => {
-    if (!regName.trim() || regName.trim().length < 2) {
-      setErrorMessage(isRu ? 'Введите ваше имя и фамилию' : 'Ism va familiyangizni kiriting');
+    if (!regName.trim()) {
+      setErrorMessage(isRu ? 'Введите имя' : 'Ismingizni kiriting');
       return;
     }
     if (!isPhoneValid(regPhone)) {

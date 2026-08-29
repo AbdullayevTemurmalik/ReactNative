@@ -17,6 +17,7 @@ import { SecurityPrivacyModal } from '../components/SecurityPrivacyModal';
 import { SupportModal } from '../components/SupportModal';
 import { NotificationsModal } from '../components/NotificationsModal';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { EditProfileModal } from '../components/EditProfileModal';
 
 export const ProfileScreen = () => {
   const {
@@ -40,6 +41,7 @@ export const ProfileScreen = () => {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const handleConfirmLogout = () => {
     logout();
@@ -95,6 +97,13 @@ export const ProfileScreen = () => {
             <View style={styles.userInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.userName}>{currentUser.name}</Text>
+                <TouchableOpacity
+                  style={styles.editPencilBtn}
+                  onPress={() => setIsEditProfileOpen(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="pencil" size={14} color="#2563EB" />
+                </TouchableOpacity>
                 <View style={styles.vipTag}>
                   <Ionicons name="sparkles" size={12} color="#854D0E" />
                   <Text style={styles.vipText}>VIP</Text>
@@ -103,13 +112,23 @@ export const ProfileScreen = () => {
               <Text style={styles.userPhone}>{currentUser.phone}</Text>
             </View>
 
-            <TouchableOpacity
-              style={styles.logoutIconBtn}
-              onPress={() => setIsLogoutModalOpen(true)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-            </TouchableOpacity>
+            <View style={styles.userCardActions}>
+              <TouchableOpacity
+                style={styles.editIconBtn}
+                onPress={() => setIsEditProfileOpen(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="create-outline" size={21} color="#2563EB" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.logoutIconBtn}
+                onPress={() => setIsLogoutModalOpen(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="log-out-outline" size={21} color="#EF4444" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -285,6 +304,7 @@ export const ProfileScreen = () => {
       <SecurityPrivacyModal visible={isSecurityOpen} onClose={() => setIsSecurityOpen(false)} />
       <SupportModal visible={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
       <NotificationsModal visible={isNotifsOpen} onClose={() => setIsNotifsOpen(false)} />
+      <EditProfileModal visible={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} />
       
       {/* CHIQISHNI TASDIQLASH */}
       <ConfirmModal
@@ -423,6 +443,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     marginTop: 2,
+  },
+  editPencilBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 6,
+  },
+  userCardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoutIconBtn: {
     width: 36,

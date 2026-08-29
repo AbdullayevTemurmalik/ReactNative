@@ -358,7 +358,53 @@ export const AppProvider = ({ children }) => {
     [users, language, showToast, t, pendingAction]
   );
 
-  // Chiqish (Logout)
+  // Profil ma'lumotlarini (Ism, Parol) yangilash
+  const updateProfile = useCallback(
+    (name, newPassword) => {
+      if (!currentUser || currentUser.isGuest) {
+        return {
+          success: false,
+          error:
+            language === 'ru'
+              ? 'Сначала войдите в аккаунт'
+              : 'Avval akkauntga kiring',
+        };
+      }
+
+      const cleanName = (name || '').trim() || currentUser.name;
+      const updatedUser = {
+        ...currentUser,
+        name: cleanName,
+      };
+
+      if (newPassword && newPassword.trim()) {
+        updatedUser.password = newPassword.trim();
+      }
+
+      setCurrentUser(updatedUser);
+      saveCurrentUserToStorage(updatedUser);
+
+      setUsers((prevUsers) => {
+        const updatedUsers = prevUsers.map((u) =>
+          u.id === currentUser.id ? { ...u, ...updatedUser } : u
+        );
+        saveUsersToStorage(updatedUsers);
+        return updatedUsers;
+      });
+
+      showToast(
+        language === 'ru'
+          ? '✅ Данные профиля успешно обновлены!'
+          : "✅ Profil ma'lumotlari muvaffaqiyatli saqlandi!",
+        'success'
+      );
+
+      return { success: true, user: updatedUser };
+    },
+    [currentUser, language, showToast]
+  );
+
+  // Chiqish (Log Out)
   const logout = useCallback(() => {
     if (currentUser && !currentUser.isGuest) {
       const now = Date.now();
@@ -740,6 +786,7 @@ export const AppProvider = ({ children }) => {
     register,
     login,
     logout,
+    updateProfile,
     checkAuthAndRun,
   };
 
