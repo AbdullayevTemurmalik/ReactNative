@@ -97,20 +97,7 @@ export const ProfileScreen = () => {
               </Text>
             </View>
             <View style={styles.userInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.userName}>{currentUser.name}</Text>
-                <TouchableOpacity
-                  style={styles.editPencilBtn}
-                  onPress={() => setIsEditProfileOpen(true)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="pencil" size={14} color="#2563EB" />
-                </TouchableOpacity>
-                <View style={styles.vipTag}>
-                  <Ionicons name="sparkles" size={12} color="#854D0E" />
-                  <Text style={styles.vipText}>VIP</Text>
-                </View>
-              </View>
+              <Text style={styles.userName}>{currentUser.name}</Text>
               <Text style={styles.userPhone}>{currentUser.phone}</Text>
             </View>
 
@@ -119,16 +106,18 @@ export const ProfileScreen = () => {
                 style={styles.editIconBtn}
                 onPress={() => setIsEditProfileOpen(true)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                activeOpacity={0.7}
               >
-                <Ionicons name="create-outline" size={21} color="#2563EB" />
+                <Ionicons name="pencil-outline" size={19} color="#2563EB" />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.logoutIconBtn}
                 onPress={() => setIsLogoutModalOpen(true)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                activeOpacity={0.7}
               >
-                <Ionicons name="log-out-outline" size={21} color="#EF4444" />
+                <Ionicons name="log-out-outline" size={20} color="#EF4444" />
               </TouchableOpacity>
             </View>
           </View>
