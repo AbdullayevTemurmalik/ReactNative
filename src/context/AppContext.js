@@ -40,7 +40,7 @@ const DEFAULT_NOTIFICATIONS = [
     title_ru: 'Добро пожаловать в SmartBozor! 🎉',
     body_ru: 'Ознакомьтесь с лучшими скидками и новинками. Приятных покупок!',
     time: new Date().toISOString(),
-    read: false,
+    read: true,
   },
 ];
 
@@ -389,16 +389,21 @@ export const AppProvider = ({ children }) => {
 
   // Bildirishnoma qo'shish
   const addNotification = useCallback((title, body, title_ru, body_ru) => {
-    const newNotif = {
-      id: 'notif-' + Date.now(),
-      title,
-      title_ru: title_ru || title,
-      body,
-      body_ru: body_ru || body,
-      time: new Date().toISOString(),
-      read: false,
-    };
     setNotifications((prev) => {
+      // Duplikat xabarlarni qayta qo'shmaslik
+      const alreadyExists = prev.some((n) => n.title === title || (title_ru && n.title_ru === title_ru));
+      if (alreadyExists) {
+        return prev;
+      }
+      const newNotif = {
+        id: 'notif-' + Date.now(),
+        title,
+        title_ru: title_ru || title,
+        body,
+        body_ru: body_ru || body,
+        time: new Date().toISOString(),
+        read: false,
+      };
       const updated = [newNotif, ...prev];
       saveNotificationsToStorage(updated);
       return updated;
