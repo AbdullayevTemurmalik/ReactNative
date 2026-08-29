@@ -30,6 +30,7 @@ export const ProductDetailScreen = () => {
     language,
   } = useApp();
   const [quantity, setQuantity] = useState(1);
+  const [isAtTop, setIsAtTop] = useState(true);
 
   const isRu = language === 'ru';
   const favorite = selectedProduct ? isFavorite(selectedProduct.id) : false;
@@ -48,6 +49,7 @@ export const ProductDetailScreen = () => {
     if (selectedProduct) {
       panY.setValue(0);
       setQuantity(1);
+      setIsAtTop(true);
     }
   }, [selectedProduct]);
 
@@ -65,16 +67,17 @@ export const ProductDetailScreen = () => {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        gestureState.dy > 6 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dy > 8 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 120 || gestureState.vy > 0.6) {
+        if (gestureState.dy > 65 || gestureState.vy > 0.35) {
           Animated.timing(panY, {
             toValue: SCREEN_HEIGHT,
             duration: 180,
@@ -180,14 +183,8 @@ export const ProductDetailScreen = () => {
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
 
-              {/* Asosiy ma'lumotlar scroll */}
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scroll}
-              >
-                {/* Rasm */}
+                {/* Rasm (Surib yopish maydoni ichida) */}
                 <View style={styles.imageContainer}>
                   <Image
                     source={{ uri: selectedProduct.image }}
@@ -201,8 +198,26 @@ export const ProductDetailScreen = () => {
                       </Text>
                     </View>
                   )}
+                  {/* Surish ko'rsatkichi */}
+                  <View style={styles.swipeHintBadge}>
+                    <Ionicons name="chevron-down" size={13} color="#FFFFFF" />
+                    <Text style={styles.swipeHintText}>
+                      {isRu ? 'Потяните вниз, чтобы закрыть' : 'Yopish uchun pastga suring'}
+                    </Text>
+                  </View>
                 </View>
+              </View>
 
+              {/* Asosiy ma'lumotlar scroll */}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scroll}
+                scrollEventThrottle={16}
+                onScroll={(e) => {
+                  const offsetY = e.nativeEvent.contentOffset.y;
+                  setIsAtTop(offsetY <= 5);
+                }}
+              >
                 <View style={styles.body}>
                   {/* Kategoriya va mavjudlik */}
                   <View style={styles.categoryRatingRow}>
@@ -430,12 +445,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  scroll: {
-    paddingBottom: 24,
-  },
   imageContainer: {
     width: '100%',
-    height: 280,
+    height: 250,
     backgroundColor: '#F8FAFC',
     position: 'relative',
   },
@@ -445,7 +457,7 @@ const styles = StyleSheet.create({
   },
   discountBadge: {
     position: 'absolute',
-    bottom: 14,
+    bottom: 12,
     left: 14,
     backgroundColor: '#EF4444',
     paddingHorizontal: 10,
@@ -456,6 +468,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '900',
+  },
+  swipeHintBadge: {
+    position: 'absolute',
+    top: 10,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeHintText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  scroll: {
+    paddingBottom: 24,
   },
   body: {
     padding: 18,
