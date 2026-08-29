@@ -42,19 +42,7 @@ export const ProfileScreen = () => {
   const [isSecurityOpen, setIsSecurityOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
-  const [isClearCacheModalOpen, setIsClearCacheModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-
-  const handleConfirmClearCache = async () => {
-    try {
-      await AsyncStorage.clear();
-      clearCart();
-      setIsClearCacheModalOpen(false);
-      showToast(language === 'ru' ? '🧹 Кэш успешно очищен' : '🧹 Barcha ma\'lumotlar tozalandi', 'info');
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleConfirmLogout = () => {
     logout();
@@ -289,15 +277,7 @@ export const ProfileScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Testlash uchun keshni tozalash */}
-          <TouchableOpacity
-            style={styles.clearCacheBtn}
-            onPress={() => setIsClearCacheModalOpen(true)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="trash-bin-outline" size={18} color="#EF4444" />
-            <Text style={styles.clearCacheText}>{t('clear_cache')}</Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Versiya */}
@@ -321,23 +301,6 @@ export const ProfileScreen = () => {
         onConfirm={handleConfirmLogout}
         onCancel={() => setIsLogoutModalOpen(false)}
         icon="log-out-outline"
-        isDestructive={true}
-      />
-
-      {/* KESHNI TOZALASH */}
-      <ConfirmModal
-        visible={isClearCacheModalOpen}
-        title={t('clear_cache')}
-        message={
-          language === 'ru'
-            ? 'Вы действительно хотите сбросить сохраненные данные приложения?'
-            : 'Ilovaning barcha saqlangan ma\'lumotlarini qayta tiklamoqchimisiz?'
-        }
-        confirmText={isRu ? 'Очистить кэш' : 'Keshni tozalash'}
-        cancelText={t('cancel_btn')}
-        onConfirm={handleConfirmClearCache}
-        onCancel={() => setIsClearCacheModalOpen(false)}
-        icon="trash-bin-outline"
         isDestructive={true}
       />
     </View>
