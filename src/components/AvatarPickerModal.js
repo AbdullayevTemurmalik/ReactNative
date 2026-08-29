@@ -6,7 +6,6 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
-  Image,
   TouchableWithoutFeedback,
   Alert,
   ActivityIndicator,
@@ -38,13 +37,15 @@ export const EMOJI_AVATARS = [
   { emoji: '⭐', bg: '#FEF08A', border: '#EAB308' },
 ];
 
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
 export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAvatar }) => {
   const { language, showToast } = useApp();
   const isRu = language === 'ru';
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Galereyadan (qurilmadan) rasm tanlash
+  // Galereyadan (qurilmadan) rasm tanlash (Maksimal 5 MB)
   const handlePickFromGallery = async () => {
     try {
       setIsLoading(true);
@@ -68,10 +69,23 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const photoUri = result.assets[0].uri;
-        onSelectAvatar(photoUri);
+        const asset = result.assets[0];
+
+        // 5 MB hajm tekshiruvi
+        if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE_BYTES) {
+          Alert.alert(
+            isRu ? 'Файл слишком большой' : 'Fayl hajmi juda katta',
+            isRu
+              ? 'Размер фото превышает 5 МБ. Пожалуйста, выберите фото меньшего размера.'
+              : 'Tanlangan rasm hajmi 5 MB dan katta. Iltimos, kichikroq rasm tanlang.'
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        onSelectAvatar(asset.uri);
         showToast(
-          isRu ? '📸 Фото профиля обновлено!' : '📸 Rasm muvaffaqiyatli o\'rnatildi!',
+          isRu ? '📸 Фото профиля обновлено!' : "📸 Rasm muvaffaqiyatli o'rnatildi!",
           'success'
         );
         if (onClose) onClose();
@@ -87,7 +101,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
     }
   };
 
-  // Kamera orqali rasmga olish
+  // Kamera orqali rasmga olish (Maksimal 5 MB)
   const handleTakePhoto = async () => {
     try {
       setIsLoading(true);
@@ -110,10 +124,22 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const photoUri = result.assets[0].uri;
-        onSelectAvatar(photoUri);
+        const asset = result.assets[0];
+
+        if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE_BYTES) {
+          Alert.alert(
+            isRu ? 'Файл слишком большой' : 'Fayl hajmi juda katta',
+            isRu
+              ? 'Размер фото превышает 5 МБ. Пожалуйста, сделайте другое фото.'
+              : 'Surat hajmi 5 MB dan katta. Iltimos, boshqa surat oling.'
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        onSelectAvatar(asset.uri);
         showToast(
-          isRu ? '📸 Фото профиля обновлено!' : '📸 Rasm muvaffaqiyatli o\'rnatildi!',
+          isRu ? '📸 Фото профиля обновлено!' : "📸 Rasm muvaffaqiyatli o'rnatildi!",
           'success'
         );
         if (onClose) onClose();
@@ -188,9 +214,17 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                 contentContainerStyle={styles.scroll}
               >
                 {/* 1. Galereyadan yoki Kameradan yuklash tugmalari */}
-                <Text style={styles.sectionLabel}>
-                  {isRu ? 'Загрузить с телефона:' : 'Qurilmadan yuklash:'}
-                </Text>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionLabel}>
+                    {isRu ? 'Загрузить с устройства:' : 'Qurilmadan yuklash:'}
+                  </Text>
+                  <View style={styles.sizeLimitBadge}>
+                    <Ionicons name="shield-checkmark" size={12} color="#16A34A" />
+                    <Text style={styles.sizeLimitText}>
+                      {isRu ? 'макс. 5 МБ' : 'maks. 5 MB'}
+                    </Text>
+                  </View>
+                </View>
 
                 <View style={styles.actionButtonsRow}>
                   <TouchableOpacity
@@ -200,7 +234,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                     activeOpacity={0.85}
                   >
                     {isLoading ? (
-                      <ActivityIndicator color="#FFFFFF" size="small" />
+                      <ActivityIndicator color="#2563EB" size="small" />
                     ) : (
                       <>
                         <View style={styles.actionIconCircle}>
@@ -211,7 +245,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                             {isRu ? 'Выбрать из галереи' : 'Galereyadan tanlash'}
                           </Text>
                           <Text style={styles.galleryBtnSub}>
-                            {isRu ? 'Фото или картинка с устройства' : 'Telefoningizdagi istalgan rasm'}
+                            {isRu ? 'PNG, JPG до 5 МБ' : 'Istalgan rasm (5 MB gacha)'}
                           </Text>
                         </View>
                         <Ionicons name="chevron-forward" size={18} color="#2563EB" />
@@ -345,10 +379,29 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 14,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '800',
     color: '#334155',
+  },
+  sizeLimitBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 4,
+  },
+  sizeLimitText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#16A34A',
   },
   actionButtonsRow: {
     flexDirection: 'row',
