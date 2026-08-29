@@ -95,6 +95,16 @@ export const AppProvider = ({ children }) => {
 
   // 1. Dastlabki ma'lumotlarni AsyncStorage dan yuklab olish (Persistence)
   useEffect(() => {
+    const safeJsonParse = (str, fallback) => {
+      if (!str) return fallback;
+      try {
+        const val = JSON.parse(str);
+        return val !== null && val !== undefined ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    };
+
     const loadStoredData = async () => {
       try {
         const [
@@ -117,20 +127,29 @@ export const AppProvider = ({ children }) => {
           AsyncStorage.getItem(STORAGE_KEYS.CURRENT_USER),
         ]);
 
-        if (storedCart) setCart(JSON.parse(storedCart));
-        if (storedFavorites) setFavorites(JSON.parse(storedFavorites));
-        if (storedOrders) setOrders(JSON.parse(storedOrders));
-        if (storedLang) setLanguageState(storedLang);
-        if (storedAddresses) setAddresses(JSON.parse(storedAddresses));
-        if (storedNotifications) setNotifications(JSON.parse(storedNotifications));
-        if (storedUsers) setUsers(JSON.parse(storedUsers));
-        if (storedCurrentUser) setCurrentUser(JSON.parse(storedCurrentUser));
+        const parsedCart = safeJsonParse(storedCart, []);
+        const parsedFavs = safeJsonParse(storedFavorites, []);
+        const parsedOrders = safeJsonParse(storedOrders, []);
+        const parsedAddresses = safeJsonParse(storedAddresses, DEFAULT_ADDRESSES);
+        const parsedNotifs = safeJsonParse(storedNotifications, DEFAULT_NOTIFICATIONS);
+        const parsedUsers = safeJsonParse(storedUsers, []);
+        const parsedUser = safeJsonParse(storedCurrentUser, null);
+
+        setCart(Array.isArray(parsedCart) ? parsedCart : []);
+        setFavorites(Array.isArray(parsedFavs) ? parsedFavs : []);
+        setOrders(Array.isArray(parsedOrders) ? parsedOrders : []);
+        setAddresses(Array.isArray(parsedAddresses) ? parsedAddresses : DEFAULT_ADDRESSES);
+        setNotifications(Array.isArray(parsedNotifs) ? parsedNotifs : DEFAULT_NOTIFICATIONS);
+        setUsers(Array.isArray(parsedUsers) ? parsedUsers : []);
+        setCurrentUser(parsedUser && typeof parsedUser === 'object' ? parsedUser : null);
+
+        if (storedLang === 'uz' || storedLang === 'ru') {
+          setLanguageState(storedLang);
+        }
       } catch (error) {
         console.error('AsyncStorage ma\'lumotlarini yuklashda xatolik:', error);
       } finally {
-        setTimeout(() => {
-          setIsInitializing(false);
-        }, 1000);
+        setIsInitializing(false);
       }
     };
 
