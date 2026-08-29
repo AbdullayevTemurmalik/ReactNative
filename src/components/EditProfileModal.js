@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 
 export const EditProfileModal = ({ visible, onClose }) => {
-  const { currentUser, updateProfile, language, t } = useApp();
+  const { currentUser, updateProfile, language } = useApp();
   const isRu = language === 'ru';
 
   const [name, setName] = useState('');
@@ -84,16 +84,17 @@ export const EditProfileModal = ({ visible, onClose }) => {
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <View style={styles.card}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.keyboardView}
+          >
+            <TouchableWithoutFeedback>
+              <View style={styles.card}>
                 {/* Header */}
                 <View style={styles.header}>
                   <View style={styles.titleRow}>
                     <View style={styles.iconCircle}>
-                      <Ionicons name="create-outline" size={18} color="#2563EB" />
+                      <Ionicons name="person-circle-outline" size={22} color="#2563EB" />
                     </View>
                     <Text style={styles.headerTitle}>
                       {isRu ? 'Редактировать профиль' : 'Profilni tahrirlash'}
@@ -104,6 +105,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                     style={styles.closeBtn}
                     onPress={onClose}
                     activeOpacity={0.7}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Ionicons name="close" size={20} color="#64748B" />
                   </TouchableOpacity>
@@ -119,6 +121,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.scroll}
+                  keyboardShouldPersistTaps="handled"
                 >
                   {/* Ism va Familiya */}
                   <View style={styles.inputGroup}>
@@ -145,7 +148,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                     </View>
                   </View>
 
-                  {/* Telefon raqam (O'zgarmas / Read-only) */}
+                  {/* Telefon raqam */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>
                       {isRu ? 'Номер телефона' : 'Telefon raqam'}
@@ -169,12 +172,19 @@ export const EditProfileModal = ({ visible, onClose }) => {
                     </View>
                   </View>
 
+                  {/* Parol bo'limi sarlavhasi */}
+                  <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>
+                      {isRu ? 'Смена пароля (по желанию)' : "Parolni o'zgartirish (ixtiyoriy)"}
+                    </Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+
                   {/* Yangi parol */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>
-                      {isRu
-                        ? 'Новый пароль (необязательно)'
-                        : "Yangi parol (ixtiyoriy)"}
+                      {isRu ? 'Новый пароль' : 'Yangi parol'}
                     </Text>
                     <View style={styles.inputWrapper}>
                       <Ionicons
@@ -185,7 +195,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                       />
                       <TextInput
                         style={styles.input}
-                        placeholder="••••••••"
+                        placeholder={isRu ? 'Введите новый пароль' : 'Yangi parolni kiriting'}
                         placeholderTextColor="#94A3B8"
                         secureTextEntry={!showPassword}
                         value={password}
@@ -212,9 +222,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                   {password.length > 0 && (
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>
-                        {isRu
-                          ? 'Подтвердите новый пароль'
-                          : 'Yangi parolni tasdiqlang'}
+                        {isRu ? 'Подтвердите пароль' : 'Parolni tasdiqlang'}
                       </Text>
                       <View style={styles.inputWrapper}>
                         <Ionicons
@@ -225,7 +233,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                         />
                         <TextInput
                           style={styles.input}
-                          placeholder="••••••••"
+                          placeholder={isRu ? 'Повторите новый пароль' : 'Yangi parolni qayta kiriting'}
                           placeholderTextColor="#94A3B8"
                           secureTextEntry={!showConfirmPassword}
                           value={confirmPassword}
@@ -240,11 +248,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
                           <Ionicons
-                            name={
-                              showConfirmPassword
-                                ? 'eye-outline'
-                                : 'eye-off-outline'
-                            }
+                            name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
                             size={18}
                             color="#64748B"
                           />
@@ -266,7 +270,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
                       <>
                         <Ionicons
                           name="checkmark-circle-outline"
-                          size={18}
+                          size={19}
                           color="#FFFFFF"
                         />
                         <Text style={styles.saveBtnText}>
@@ -276,9 +280,9 @@ export const EditProfileModal = ({ visible, onClose }) => {
                     )}
                   </TouchableOpacity>
                 </ScrollView>
-              </KeyboardAvoidingView>
-            </View>
-          </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
@@ -291,20 +295,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
+  },
+  keyboardView: {
+    width: '100%',
+    maxWidth: 380,
+    alignItems: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     width: '100%',
-    maxWidth: 360,
-    maxHeight: '85%',
+    maxHeight: '90%',
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
   },
   header: {
     flexDirection: 'row',
@@ -320,22 +328,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 16.5,
     fontWeight: '800',
     color: '#0F172A',
   },
   closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
@@ -345,9 +353,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FEE2E2',
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     marginTop: 12,
-    gap: 6,
+    gap: 8,
   },
   errorText: {
     fontSize: 12.5,
@@ -356,14 +364,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scroll: {
-    paddingVertical: 14,
+    paddingTop: 14,
+    paddingBottom: 8,
     gap: 14,
   },
   inputGroup: {
-    gap: 5,
+    gap: 6,
   },
   label: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: '700',
     color: '#334155',
   },
@@ -373,44 +382,65 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 46,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 48,
   },
   inputDisabled: {
     backgroundColor: '#F1F5F9',
     borderColor: '#E2E8F0',
   },
   disabledText: {
-    fontSize: 13.5,
+    fontSize: 14,
     color: '#64748B',
     fontWeight: '600',
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 14,
     color: '#0F172A',
     fontWeight: '600',
   },
   eyeBtn: {
-    padding: 4,
+    padding: 6,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+    gap: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#94A3B8',
   },
   saveBtn: {
     backgroundColor: '#2563EB',
-    height: 48,
+    height: 50,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 12,
     gap: 8,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: '800',
   },
 });
