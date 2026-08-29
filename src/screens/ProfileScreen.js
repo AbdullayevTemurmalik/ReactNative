@@ -94,10 +94,16 @@ export const ProfileScreen = () => {
               activeOpacity={0.8}
             >
               {currentUser.avatar ? (
-                <Image
-                  source={{ uri: currentUser.avatar }}
-                  style={styles.avatarImg}
-                />
+                currentUser.avatar.includes('/') || currentUser.avatar.startsWith('file:') || currentUser.avatar.startsWith('http') || currentUser.avatar.startsWith('data:') ? (
+                  <Image
+                    source={{ uri: currentUser.avatar }}
+                    style={styles.avatarImg}
+                  />
+                ) : (
+                  <View style={styles.emojiAvatar}>
+                    <Text style={styles.emojiAvatarText}>{currentUser.avatar}</Text>
+                  </View>
+                )
               ) : (
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
@@ -475,6 +481,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emojiAvatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#BFDBFE',
+  },
+  emojiAvatarText: {
+    fontSize: 28,
   },
   cameraIconBadge: {
     position: 'absolute',

@@ -7,58 +7,146 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  TextInput,
   TouchableWithoutFeedback,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '../context/AppContext';
 
-export const PRESET_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400&auto=format&fit=crop&q=80',
+export const EMOJI_AVATARS = [
+  { emoji: '🦁', bg: '#FEF3C7', border: '#F59E0B' },
+  { emoji: '👑', bg: '#FEF9C3', border: '#EAB308' },
+  { emoji: '⚡', bg: '#EFF6FF', border: '#3B82F6' },
+  { emoji: '🚀', bg: '#EEF2FF', border: '#6366F1' },
+  { emoji: '💎', bg: '#ECFEFF', border: '#06B6D4' },
+  { emoji: '🕶️', bg: '#F1F5F9', border: '#475569' },
+  { emoji: '🦅', bg: '#FFF7ED', border: '#EA580C' },
+  { emoji: '🐯', bg: '#FFFBEB', border: '#D97706' },
+  { emoji: '🎯', bg: '#FEF2F2', border: '#EF4444' },
+  { emoji: '🌟', bg: '#FEF08A', border: '#CA8A04' },
+  { emoji: '🦄', bg: '#FDF4FF', border: '#D946EF' },
+  { emoji: '🎮', bg: '#F5F3FF', border: '#8B5CF6' },
+  { emoji: '🦊', bg: '#FFF7ED', border: '#F97316' },
+  { emoji: '🔥', bg: '#FFF1F2', border: '#F43F5E' },
+  { emoji: '🏆', bg: '#FEF9C3', border: '#EAB308' },
+  { emoji: '🤖', bg: '#F0FDFA', border: '#14B8A6' },
+  { emoji: '🏎️', bg: '#FEF2F2', border: '#DC2626' },
+  { emoji: '🥊', bg: '#FFF1F2', border: '#E11D48' },
+  { emoji: '🎧', bg: '#F0F9FF', border: '#0284C7' },
+  { emoji: '⭐', bg: '#FEF08A', border: '#EAB308' },
 ];
 
 export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAvatar }) => {
   const { language, showToast } = useApp();
   const isRu = language === 'ru';
 
-  const [selectedAvatar, setSelectedAvatar] = useState(currentAvatar || '');
-  const [customUrl, setCustomUrl] = useState('');
-  const [isAddingUrl, setIsAddingUrl] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleApply = (avatarUrl) => {
-    const url = avatarUrl || selectedAvatar;
-    if (!url) {
+  // Galereyadan (qurilmadan) rasm tanlash
+  const handlePickFromGallery = async () => {
+    try {
+      setIsLoading(true);
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          isRu ? 'Доступ запрещен' : 'Ruxsat berilmadi',
+          isRu
+            ? 'Пожалуйста, разрешите доступ к галерее в настройках телефона.'
+            : 'Iltimos, telefon sozlamalaridan galereyaga ruxsat bering.'
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const photoUri = result.assets[0].uri;
+        onSelectAvatar(photoUri);
+        showToast(
+          isRu ? '📸 Фото профиля обновлено!' : '📸 Rasm muvaffaqiyatli o\'rnatildi!',
+          'success'
+        );
+        if (onClose) onClose();
+      }
+    } catch (error) {
+      console.error(error);
       Alert.alert(
-        isRu ? 'Выберите аватар' : 'Rasmni tanlang',
-        isRu ? 'Пожалуйста, выберите фото из списка или введите ссылку' : "Iltimos, ro'yxatdan rasm tanlang yoki havolani kiriting"
+        isRu ? 'Ошибка' : 'Xatolik',
+        isRu ? 'Не удалось выбрать фото' : 'Rasmni tanlashda xatolik yuz berdi'
       );
-      return;
+    } finally {
+      setIsLoading(false);
     }
-    onSelectAvatar(url);
+  };
+
+  // Kamera orqali rasmga olish
+  const handleTakePhoto = async () => {
+    try {
+      setIsLoading(true);
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          isRu ? 'Доступ к камере запрещен' : 'Kameraga ruxsat berilmadi',
+          isRu
+            ? 'Пожалуйста, разрешите доступ к камере в настройках телефона.'
+            : 'Iltimos, telefon sozlamalaridan kameraga ruxsat bering.'
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const photoUri = result.assets[0].uri;
+        onSelectAvatar(photoUri);
+        showToast(
+          isRu ? '📸 Фото профиля обновлено!' : '📸 Rasm muvaffaqiyatli o\'rnatildi!',
+          'success'
+        );
+        if (onClose) onClose();
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        isRu ? 'Ошибка' : 'Xatolik',
+        isRu ? 'Не удалось сделать фото' : 'Suratga olishda xatolik yuz berdi'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Emoji avatar tanlash
+  const handleSelectEmoji = (emoji) => {
+    onSelectAvatar(emoji);
     showToast(
-      isRu ? '📸 Фото профиля обновлено!' : "📸 Profil rasmi yangilandi!",
+      isRu ? `✨ Аватар ${emoji} установлен!` : `✨ ${emoji} avatari o'rnatildi!`,
       'success'
     );
     if (onClose) onClose();
   };
 
-  const handleCustomUrlSubmit = () => {
-    if (!customUrl.trim() || !customUrl.startsWith('http')) {
-      Alert.alert(
-        isRu ? 'Некорректная ссылка' : "Noto'g'ri havola",
-        isRu ? 'Ссылка должна начинаться с https://' : "Rasm havolasi https:// bilan boshlanishi kerak"
-      );
-      return;
-    }
-    handleApply(customUrl.trim());
+  // Rasmni o'chirish / Boshlang'ich harflarga qaytarish
+  const handleResetAvatar = () => {
+    onSelectAvatar('');
+    showToast(
+      isRu ? '🗑️ Аватар сброшен' : '🗑️ Standart holatga qaytarildi',
+      'info'
+    );
+    if (onClose) onClose();
   };
 
   if (!visible) return null;
@@ -78,10 +166,10 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
               <View style={styles.header}>
                 <View style={styles.titleRow}>
                   <View style={styles.iconCircle}>
-                    <Ionicons name="camera-outline" size={20} color="#2563EB" />
+                    <Ionicons name="sparkles" size={18} color="#2563EB" />
                   </View>
                   <Text style={styles.headerTitle}>
-                    {isRu ? 'Выберите фото профиля' : 'Profil rasmini tanlang'}
+                    {isRu ? 'Аватар профиля' : 'Profil rasmi va Emoji'}
                   </Text>
                 </View>
 
@@ -91,7 +179,7 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                   activeOpacity={0.7}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close" size={20} color="#64748B" />
+                  <Ionicons name="close" size={22} color="#64748B" />
                 </TouchableOpacity>
               </View>
 
@@ -99,57 +187,78 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scroll}
               >
-                {/* Joriy tanlangan rasm */}
-                <View style={styles.previewSection}>
-                  <View style={styles.previewWrapper}>
-                    {selectedAvatar ? (
-                      <Image
-                        source={{ uri: selectedAvatar }}
-                        style={styles.previewImage}
-                      />
+                {/* 1. Galereyadan yoki Kameradan yuklash tugmalari */}
+                <Text style={styles.sectionLabel}>
+                  {isRu ? 'Загрузить с телефона:' : 'Qurilmadan yuklash:'}
+                </Text>
+
+                <View style={styles.actionButtonsRow}>
+                  <TouchableOpacity
+                    style={styles.galleryBtn}
+                    onPress={handlePickFromGallery}
+                    disabled={isLoading}
+                    activeOpacity={0.85}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
                     ) : (
-                      <View style={styles.previewPlaceholder}>
-                        <Ionicons name="person" size={48} color="#94A3B8" />
-                      </View>
+                      <>
+                        <View style={styles.actionIconCircle}>
+                          <Ionicons name="images" size={22} color="#2563EB" />
+                        </View>
+                        <View style={styles.actionTextCol}>
+                          <Text style={styles.galleryBtnTitle}>
+                            {isRu ? 'Выбрать из галереи' : 'Galereyadan tanlash'}
+                          </Text>
+                          <Text style={styles.galleryBtnSub}>
+                            {isRu ? 'Фото или картинка с устройства' : 'Telefoningizdagi istalgan rasm'}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+                      </>
                     )}
-                    <View style={styles.cameraBadge}>
-                      <Ionicons name="sparkles" size={14} color="#FFFFFF" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.cameraBtn}
+                    onPress={handleTakePhoto}
+                    disabled={isLoading}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.cameraIconCircle}>
+                      <Ionicons name="camera" size={20} color="#16A34A" />
                     </View>
-                  </View>
-                  <Text style={styles.previewHint}>
-                    {isRu
-                      ? 'Выберите понравившийся аватар ниже'
-                      : "Quyidagi tayyor professional rasmlardan birini tanlang"}
+                    <Text style={styles.cameraBtnText}>
+                      {isRu ? 'Камера' : 'Kamera'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* 2. Emojilar to'plami */}
+                <View style={styles.emojiSectionHeader}>
+                  <Text style={styles.sectionLabel}>
+                    {isRu ? 'Или выберите 3D Emoji:' : 'Yoki qiziqarli Emoji tanlang:'}
                   </Text>
                 </View>
 
-                {/* Tayyor avatarlar to'plami */}
-                <Text style={styles.sectionLabel}>
-                  {isRu ? 'Коллекция аватаров:' : "Rasmlar to'plami:"}
-                </Text>
-                <View style={styles.avatarGrid}>
-                  {PRESET_AVATARS.map((url, idx) => {
-                    const isSelected = selectedAvatar === url;
+                <View style={styles.emojiGrid}>
+                  {EMOJI_AVATARS.map((item, idx) => {
+                    const isSelected = currentAvatar === item.emoji;
                     return (
                       <TouchableOpacity
                         key={idx}
                         style={[
-                          styles.avatarItem,
-                          isSelected && styles.avatarItemSelected,
+                          styles.emojiItem,
+                          { backgroundColor: item.bg, borderColor: item.border },
+                          isSelected && styles.emojiItemSelected,
                         ]}
-                        onPress={() => {
-                          setSelectedAvatar(url);
-                        }}
-                        activeOpacity={0.8}
+                        onPress={() => handleSelectEmoji(item.emoji)}
+                        activeOpacity={0.7}
                       >
-                        <Image source={{ uri: url }} style={styles.avatarImg} />
+                        <Text style={styles.emojiChar}>{item.emoji}</Text>
                         {isSelected && (
-                          <View style={styles.checkOverlay}>
-                            <Ionicons
-                              name="checkmark-circle"
-                              size={24}
-                              color="#2563EB"
-                            />
+                          <View style={styles.checkBadge}>
+                            <Ionicons name="checkmark-circle" size={16} color="#2563EB" />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -157,57 +266,19 @@ export const AvatarPickerModal = ({ visible, onClose, onSelectAvatar, currentAva
                   })}
                 </View>
 
-                {/* O'z havolasini kiritish */}
-                <View style={styles.customSection}>
+                {/* 3. Standart holatga qaytarish (agar rasm bor bo'lsa) */}
+                {currentAvatar ? (
                   <TouchableOpacity
-                    style={styles.toggleCustomBtn}
-                    onPress={() => setIsAddingUrl((prev) => !prev)}
+                    style={styles.resetBtn}
+                    onPress={handleResetAvatar}
                     activeOpacity={0.7}
                   >
-                    <Ionicons
-                      name={isAddingUrl ? 'chevron-up' : 'link-outline'}
-                      size={18}
-                      color="#2563EB"
-                    />
-                    <Text style={styles.toggleCustomText}>
-                      {isRu
-                        ? 'Использовать свою ссылку на фото'
-                        : "O'z rasm havolangizni (URL) kiritish"}
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                    <Text style={styles.resetBtnText}>
+                      {isRu ? 'Удалить аватар' : "Rasmni o'chirish"}
                     </Text>
                   </TouchableOpacity>
-
-                  {isAddingUrl && (
-                    <View style={styles.urlInputRow}>
-                      <TextInput
-                        style={styles.urlInput}
-                        placeholder="https://images.unsplash.com/..."
-                        placeholderTextColor="#94A3B8"
-                        value={customUrl}
-                        onChangeText={setCustomUrl}
-                        autoCapitalize="none"
-                      />
-                      <TouchableOpacity
-                        style={styles.urlSubmitBtn}
-                        onPress={handleCustomUrlSubmit}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-
-                {/* Saqlash tugmasi */}
-                <TouchableOpacity
-                  style={styles.saveBtn}
-                  onPress={() => handleApply(selectedAvatar)}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.saveBtnText}>
-                    {isRu ? 'Установить фото' : "Rasmni o'rnatish"}
-                  </Text>
-                </TouchableOpacity>
+                ) : null}
               </ScrollView>
             </View>
           </TouchableWithoutFeedback>
@@ -227,7 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '88%',
+    maxHeight: '85%',
     paddingBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -8 },
@@ -240,7 +311,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -250,9 +321,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -272,148 +343,124 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: 20,
-    gap: 16,
-  },
-  previewSection: {
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  previewWrapper: {
-    position: 'relative',
-    marginBottom: 10,
-  },
-  previewImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 3,
-    borderColor: '#2563EB',
-  },
-  previewPlaceholder: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-  },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#2563EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  previewHint: {
-    fontSize: 12.5,
-    color: '#64748B',
-    textAlign: 'center',
-    fontWeight: '500',
+    gap: 14,
   },
   sectionLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#334155',
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  galleryBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    gap: 10,
+  },
+  actionIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  actionTextCol: {
+    flex: 1,
+  },
+  galleryBtnTitle: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#1E293B',
+    color: '#1E40AF',
   },
-  avatarGrid: {
+  galleryBtnSub: {
+    fontSize: 11,
+    color: '#60A5FA',
+    marginTop: 2,
+  },
+  cameraBtn: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F0FDF4',
+    borderRadius: 18,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    gap: 6,
+  },
+  cameraIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraBtnText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  emojiSectionHeader: {
+    marginTop: 8,
+  },
+  emojiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
     justifyContent: 'space-between',
   },
-  avatarItem: {
-    width: '22%',
+  emojiItem: {
+    width: '18%',
     aspectRatio: 1,
-    borderRadius: 18,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
     position: 'relative',
   },
-  avatarItemSelected: {
-    borderColor: '#2563EB',
+  emojiItemSelected: {
     borderWidth: 3,
+    borderColor: '#2563EB',
   },
-  avatarImg: {
-    width: '100%',
-    height: '100%',
+  emojiChar: {
+    fontSize: 26,
   },
-  checkOverlay: {
+  checkBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: -4,
+    right: -4,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 8,
   },
-  customSection: {
-    marginTop: 6,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  toggleCustomBtn: {
+  resetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#FEF2F2',
+    gap: 6,
+    marginTop: 6,
   },
-  toggleCustomText: {
+  resetBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#2563EB',
-  },
-  urlInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 8,
-  },
-  urlInput: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 42,
-    fontSize: 12.5,
-    color: '#0F172A',
-  },
-  urlSubmitBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    backgroundColor: '#2563EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveBtn: {
-    backgroundColor: '#2563EB',
-    height: 50,
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 8,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  saveBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14.5,
-    fontWeight: '800',
+    color: '#EF4444',
   },
 });
