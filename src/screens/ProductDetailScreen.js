@@ -8,14 +8,26 @@ import {
   TouchableOpacity,
   Modal,
   Share,
+  TouchableWithoutFeedback,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { formatPrice, getDiscountPercent } from '../utils/formatters';
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export const ProductDetailScreen = () => {
-  const { selectedProduct, setSelectedProduct, addToCart, toggleFavorite, isFavorite, t, language } = useApp();
+  const {
+    selectedProduct,
+    setSelectedProduct,
+    addToCart,
+    toggleFavorite,
+    isFavorite,
+    t,
+    language,
+  } = useApp();
   const [quantity, setQuantity] = useState(1);
 
   if (!selectedProduct) return null;
@@ -24,6 +36,11 @@ export const ProductDetailScreen = () => {
   const favorite = isFavorite(selectedProduct.id);
   const discount = getDiscountPercent(selectedProduct.oldPrice, selectedProduct.price);
   const savings = selectedProduct.oldPrice ? selectedProduct.oldPrice - selectedProduct.price : 0;
+
+  const handleClose = () => {
+    setSelectedProduct(null);
+    setQuantity(1);
+  };
 
   const handleShare = async () => {
     try {
@@ -37,228 +54,255 @@ export const ProductDetailScreen = () => {
 
   const handleAddToCart = () => {
     addToCart(selectedProduct, quantity);
-    setSelectedProduct(null);
-    setQuantity(1);
+    handleClose();
   };
 
   return (
     <Modal
       visible={!!selectedProduct}
+      transparent={true}
       animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={() => {
-        setSelectedProduct(null);
-        setQuantity(1);
-      }}
+      onRequestClose={handleClose}
     >
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right', 'bottom']}>
-        {/* Yuqori navigatsiya paneli */}
-        <View style={styles.topNav}>
-          <TouchableOpacity
-            style={styles.navBtn}
-            onPress={() => {
-              setSelectedProduct(null);
-              setQuantity(1);
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="close" size={24} color="#0F172A" />
-          </TouchableOpacity>
+      {/* Tashqi fonga yoki yuqori/yon tomonlarga bosilganda modal darhol yopiladi */}
+      <TouchableWithoutFeedback onPress={handleClose}>
+        <View style={styles.overlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.sheet}>
+              {/* Tutqich (Drag handle) */}
+              <View style={styles.handle} />
 
-          <Text style={styles.navTitle} numberOfLines={1}>
-            {selectedProduct.name}
-          </Text>
+              {/* Yuqori navigatsiya paneli */}
+              <View style={styles.topNav}>
+                <TouchableOpacity
+                  style={styles.navBtn}
+                  onPress={handleClose}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={22} color="#0F172A" />
+                </TouchableOpacity>
 
-          <View style={styles.navActions}>
-            <TouchableOpacity style={styles.navBtn} onPress={handleShare} activeOpacity={0.7}>
-              <Ionicons name="share-social-outline" size={22} color="#0F172A" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.navBtn}
-              onPress={() => toggleFavorite(selectedProduct.id)}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={favorite ? 'heart' : 'heart-outline'}
-                size={22}
-                color={favorite ? '#EF4444' : '#0F172A'}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
+                <Text style={styles.navTitle} numberOfLines={1}>
+                  {selectedProduct.name}
+                </Text>
 
-        {/* Asosiy ma'lumotlar */}
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          {/* Rasm */}
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: selectedProduct.image }} style={styles.image} resizeMode="cover" />
-            {discount > 0 && (
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>-{discount}% {t('discount')}</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.body}>
-            {/* Kategoriya va reyting */}
-            <View style={styles.categoryRatingRow}>
-              <View style={styles.categoryTag}>
-                <Text style={styles.categoryText}>{t(selectedProduct.categoryKey || 'cat_all')}</Text>
-              </View>
-              <View style={styles.stockBadge}>
-                <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-                <Text style={styles.stockText}>{t('in_stock')}</Text>
-              </View>
-            </View>
-
-            {/* Mahsulot nomi */}
-            <Text style={styles.title}>{selectedProduct.name}</Text>
-
-            {/* Reyting qatori */}
-            <View style={styles.ratingSection}>
-              <Ionicons name="star" size={16} color="#F59E0B" />
-              <Text style={styles.ratingScore}>{selectedProduct.rating}</Text>
-              <Text style={styles.ratingCount}>({selectedProduct.reviewsCount} {t('reviews_count')})</Text>
-              <Text style={styles.dotSeparator}>•</Text>
-              <Text style={styles.soldText}>120+ {t('sold_count')}</Text>
-            </View>
-
-            {/* Narx qatori */}
-            <View style={styles.priceCard}>
-              <View>
-                {selectedProduct.oldPrice && (
-                  <Text style={styles.oldPrice}>{formatPrice(selectedProduct.oldPrice)}</Text>
-                )}
-                <Text style={styles.price}>{formatPrice(selectedProduct.price)}</Text>
-              </View>
-              {savings > 0 && (
-                <View style={styles.savingsBox}>
-                  <Text style={styles.savingsLabel}>{t('savings')}</Text>
-                  <Text style={styles.savingsValue}>{formatPrice(savings)}</Text>
+                <View style={styles.navActions}>
+                  <TouchableOpacity style={styles.navBtn} onPress={handleShare} activeOpacity={0.7}>
+                    <Ionicons name="share-social-outline" size={20} color="#0F172A" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.navBtn}
+                    onPress={() => toggleFavorite(selectedProduct.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={favorite ? 'heart' : 'heart-outline'}
+                      size={20}
+                      color={favorite ? '#EF4444' : '#0F172A'}
+                    />
+                  </TouchableOpacity>
                 </View>
-              )}
-            </View>
+              </View>
 
-            {/* Tavsif */}
-            <Text style={styles.sectionHeader}>{t('about_product')}</Text>
-            <Text style={styles.description}>
-              {isRu && selectedProduct.description_ru ? selectedProduct.description_ru : selectedProduct.description}
-            </Text>
-
-            {/* Xususiyatlari */}
-            {selectedProduct.specs && selectedProduct.specs.length > 0 && (
-              <>
-                <Text style={styles.sectionHeader}>{t('specs_title')}</Text>
-                <View style={styles.specsTable}>
-                  {selectedProduct.specs.map((item, idx) => (
-                    <View key={idx} style={[styles.specRow, idx % 2 === 1 && styles.specRowAlt]}>
-                      <Text style={styles.specLabel}>{isRu && item.label_ru ? item.label_ru : item.label}</Text>
-                      <Text style={styles.specValue}>{item.value}</Text>
+              {/* Asosiy ma'lumotlar scroll */}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scroll}
+              >
+                {/* Rasm */}
+                <View style={styles.imageContainer}>
+                  <Image source={{ uri: selectedProduct.image }} style={styles.image} resizeMode="cover" />
+                  {discount > 0 && (
+                    <View style={styles.discountBadge}>
+                      <Text style={styles.discountText}>-{discount}% {t('discount')}</Text>
                     </View>
-                  ))}
+                  )}
                 </View>
-              </>
-            )}
 
-            {/* Kafolat va yetkazib berish xizmati */}
-            <View style={styles.guaranteeCard}>
-              <View style={styles.guaranteeItem}>
-                <Ionicons name="shield-checkmark" size={24} color="#2563EB" />
-                <View style={styles.guaranteeTextContainer}>
-                  <Text style={styles.guaranteeTitle}>{t('guarantee_title')}</Text>
-                  <Text style={styles.guaranteeSub}>{t('guarantee_sub')}</Text>
+                <View style={styles.body}>
+                  {/* Kategoriya va mavjudlik */}
+                  <View style={styles.categoryRatingRow}>
+                    <View style={styles.categoryTag}>
+                      <Text style={styles.categoryText}>{t(selectedProduct.categoryKey || 'cat_all')}</Text>
+                    </View>
+                    <View style={styles.stockBadge}>
+                      <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
+                      <Text style={styles.stockText}>{t('in_stock')}</Text>
+                    </View>
+                  </View>
+
+                  {/* Mahsulot nomi */}
+                  <Text style={styles.title}>{selectedProduct.name}</Text>
+
+                  {/* Reyting qatori */}
+                  <View style={styles.ratingSection}>
+                    <Ionicons name="star" size={16} color="#F59E0B" />
+                    <Text style={styles.ratingScore}>{selectedProduct.rating}</Text>
+                    <Text style={styles.ratingCount}>({selectedProduct.reviewsCount} {t('reviews_count')})</Text>
+                    <Text style={styles.dotSeparator}>•</Text>
+                    <Text style={styles.soldText}>120+ {t('sold_count')}</Text>
+                  </View>
+
+                  {/* Narx qatori */}
+                  <View style={styles.priceCard}>
+                    <View>
+                      {selectedProduct.oldPrice && (
+                        <Text style={styles.oldPrice}>{formatPrice(selectedProduct.oldPrice)}</Text>
+                      )}
+                      <Text style={styles.price}>{formatPrice(selectedProduct.price)}</Text>
+                    </View>
+                    {savings > 0 && (
+                      <View style={styles.savingsBox}>
+                        <Text style={styles.savingsLabel}>{t('savings')}</Text>
+                        <Text style={styles.savingsValue}>{formatPrice(savings)}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Tavsif */}
+                  <Text style={styles.sectionHeader}>{t('about_product')}</Text>
+                  <Text style={styles.description}>
+                    {isRu && selectedProduct.description_ru ? selectedProduct.description_ru : selectedProduct.description}
+                  </Text>
+
+                  {/* Xususiyatlari */}
+                  {selectedProduct.specs && selectedProduct.specs.length > 0 && (
+                    <>
+                      <Text style={styles.sectionHeader}>{t('specs_title')}</Text>
+                      <View style={styles.specsTable}>
+                        {selectedProduct.specs.map((item, idx) => (
+                          <View key={idx} style={[styles.specRow, idx % 2 === 1 && styles.specRowAlt]}>
+                            <Text style={styles.specLabel}>{isRu && item.label_ru ? item.label_ru : item.label}</Text>
+                            <Text style={styles.specValue}>{item.value}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </>
+                  )}
+
+                  {/* Kafolat va yetkazib berish xizmati */}
+                  <View style={styles.guaranteeCard}>
+                    <View style={styles.guaranteeItem}>
+                      <Ionicons name="shield-checkmark" size={22} color="#2563EB" />
+                      <View style={styles.guaranteeTextContainer}>
+                        <Text style={styles.guaranteeTitle}>{t('guarantee_title')}</Text>
+                        <Text style={styles.guaranteeSub}>{t('guarantee_sub')}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.guaranteeItem}>
+                      <Ionicons name="cube" size={22} color="#16A34A" />
+                      <View style={styles.guaranteeTextContainer}>
+                        <Text style={styles.guaranteeTitle}>{t('delivery_title')}</Text>
+                        <Text style={styles.guaranteeSub}>{t('delivery_sub')}</Text>
+                      </View>
+                    </View>
+                  </View>
                 </View>
-              </View>
+              </ScrollView>
 
-              <View style={styles.divider} />
-
-              <View style={styles.guaranteeItem}>
-                <Ionicons name="cube" size={24} color="#16A34A" />
-                <View style={styles.guaranteeTextContainer}>
-                  <Text style={styles.guaranteeTitle}>{t('delivery_title')}</Text>
-                  <Text style={styles.guaranteeSub}>{t('delivery_sub')}</Text>
+              {/* Pastki savatga qo'shish paneli */}
+              <View style={styles.bottomBar}>
+                <View style={styles.stepper}>
+                  <TouchableOpacity
+                    style={styles.stepperBtn}
+                    onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="remove" size={18} color="#0F172A" />
+                  </TouchableOpacity>
+                  <Text style={styles.stepperValue}>{quantity}</Text>
+                  <TouchableOpacity
+                    style={styles.stepperBtn}
+                    onPress={() => setQuantity((q) => q + 1)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add" size={18} color="#0F172A" />
+                  </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity
+                  style={styles.addCartBtn}
+                  onPress={handleAddToCart}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="bag-add" size={20} color="#FFFFFF" />
+                  <Text style={styles.addCartText}>
+                    {t('add_to_cart')} ({formatPrice(selectedProduct.price * quantity)})
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </View>
-        </ScrollView>
-
-        {/* Pastki savatga qo'shish paneli */}
-        <View style={styles.bottomBar}>
-          <View style={styles.stepper}>
-            <TouchableOpacity
-              style={styles.stepperBtn}
-              onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="remove" size={18} color="#0F172A" />
-            </TouchableOpacity>
-            <Text style={styles.stepperValue}>{quantity}</Text>
-            <TouchableOpacity
-              style={styles.stepperBtn}
-              onPress={() => setQuantity((q) => q + 1)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="add" size={18} color="#0F172A" />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={styles.addCartBtn}
-            onPress={handleAddToCart}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="bag-add" size={20} color="#FFFFFF" />
-            <Text style={styles.addCartText}>
-              {t('add_to_cart')} ({formatPrice(selectedProduct.price * quantity)})
-            </Text>
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         </View>
-      </SafeAreaView>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
     backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    height: SCREEN_HEIGHT * 0.9,
+    paddingTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  handle: {
+    width: 42,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+    marginBottom: 6,
   },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
   navBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   navTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14.5,
+    fontWeight: '800',
     color: '#0F172A',
     flex: 1,
     textAlign: 'center',
-    marginHorizontal: 12,
+    marginHorizontal: 10,
   },
   navActions: {
     flexDirection: 'row',
     gap: 8,
   },
   scroll: {
-    paddingBottom: 30,
+    paddingBottom: 24,
   },
   imageContainer: {
     width: '100%',
-    height: 280,
+    height: 270,
     backgroundColor: '#F8FAFC',
     position: 'relative',
   },
@@ -281,13 +325,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   body: {
-    padding: 20,
+    padding: 18,
   },
   categoryRatingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   categoryTag: {
     backgroundColor: '#EFF6FF',
@@ -311,16 +355,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '800',
     color: '#0F172A',
-    lineHeight: 26,
-    marginBottom: 10,
+    lineHeight: 25,
+    marginBottom: 8,
   },
   ratingSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   ratingScore: {
     fontSize: 14,
@@ -329,7 +373,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   ratingCount: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#64748B',
     marginLeft: 4,
   },
@@ -338,7 +382,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   soldText: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#64748B',
   },
   priceCard: {
@@ -346,19 +390,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 16,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   oldPrice: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#94A3B8',
     textDecorationLine: 'line-through',
   },
   price: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
     color: '#2563EB',
     marginTop: 2,
@@ -366,32 +410,32 @@ const styles = StyleSheet.create({
   savingsBox: {
     backgroundColor: '#DCFCE7',
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     alignItems: 'flex-end',
   },
   savingsLabel: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: '#15803D',
     fontWeight: '600',
   },
   savingsValue: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#15803D',
     fontWeight: '800',
   },
   sectionHeader: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: '#0F172A',
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 8,
   },
   description: {
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#475569',
-    lineHeight: 22,
-    marginBottom: 16,
+    lineHeight: 20,
+    marginBottom: 14,
   },
   specsTable: {
     backgroundColor: '#FFFFFF',
@@ -399,13 +443,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   specRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -413,62 +457,62 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   specLabel: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#64748B',
     fontWeight: '500',
   },
   specValue: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#0F172A',
     fontWeight: '700',
   },
   guaranteeCard: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   guaranteeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   guaranteeTextContainer: {
     flex: 1,
   },
   guaranteeTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
     color: '#0F172A',
   },
   guaranteeSub: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#64748B',
     marginTop: 2,
   },
   divider: {
     height: 1,
     backgroundColor: '#E2E8F0',
-    marginVertical: 12,
+    marginVertical: 10,
   },
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    gap: 14,
+    gap: 12,
   },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
   },
   stepperBtn: {
     width: 32,
@@ -487,7 +531,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     color: '#0F172A',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
   addCartBtn: {
     flex: 1,
@@ -495,7 +539,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 13,
     borderRadius: 14,
     gap: 8,
     shadowColor: '#2563EB',
@@ -506,7 +550,7 @@ const styles = StyleSheet.create({
   },
   addCartText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '800',
   },
 });
