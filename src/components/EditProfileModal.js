@@ -14,12 +14,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { formatPhoneNumber, isPhoneValid } from '../utils/formatters';
 
 export const EditProfileModal = ({ visible, onClose }) => {
   const { currentUser, updateProfile, language } = useApp();
   const isRu = language === 'ru';
 
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('+998 ');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,15 +32,35 @@ export const EditProfileModal = ({ visible, onClose }) => {
   useEffect(() => {
     if (visible && currentUser) {
       setName(currentUser.name || '');
+      setPhone(currentUser.phone ? formatPhoneNumber(currentUser.phone) : '+998 ');
       setPassword('');
       setConfirmPassword('');
       setErrorMessage('');
     }
   }, [visible, currentUser]);
 
+  const handlePhoneChange = (text) => {
+    if (!text.startsWith('+998')) {
+      setPhone('+998 ');
+      return;
+    }
+    const formatted = formatPhoneNumber(text);
+    setPhone(formatted);
+    if (errorMessage) setErrorMessage('');
+  };
+
   const handleSave = () => {
     if (!name.trim()) {
       setErrorMessage(isRu ? 'Введите имя' : 'Ismingizni kiriting');
+      return;
+    }
+
+    if (!isPhoneValid(phone)) {
+      setErrorMessage(
+        isRu
+          ? 'Введите корректный номер телефона'
+          : "Telefon raqamini to'liq kiriting (+998 90 123 45 67)"
+      );
       return;
     }
 
@@ -63,7 +85,7 @@ export const EditProfileModal = ({ visible, onClose }) => {
     setErrorMessage('');
 
     setTimeout(() => {
-      const res = updateProfile(name, password);
+      const res = updateProfile(name, password, phone);
       setIsLoading(false);
       if (res.success) {
         if (onClose) onClose();
@@ -148,26 +170,25 @@ export const EditProfileModal = ({ visible, onClose }) => {
                     </View>
                   </View>
 
-                  {/* Telefon raqam */}
+                  {/* Telefon raqam (O'zgartiriladigan) */}
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>
                       {isRu ? 'Номер телефона' : 'Telefon raqam'}
                     </Text>
-                    <View style={[styles.inputWrapper, styles.inputDisabled]}>
+                    <View style={styles.inputWrapper}>
                       <Ionicons
                         name="call-outline"
                         size={18}
-                        color="#94A3B8"
+                        color="#2563EB"
                         style={styles.inputIcon}
                       />
-                      <Text style={styles.disabledText}>
-                        {currentUser?.phone || '+998 90 123 45 67'}
-                      </Text>
-                      <Ionicons
-                        name="lock-closed"
-                        size={16}
-                        color="#94A3B8"
-                        style={{ marginLeft: 'auto' }}
+                      <TextInput
+                        style={styles.input}
+                        keyboardType="phone-pad"
+                        placeholder="+998 90 123 45 67"
+                        placeholderTextColor="#94A3B8"
+                        value={phone}
+                        onChangeText={handlePhoneChange}
                       />
                     </View>
                   </View>
@@ -385,15 +406,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
-  },
-  inputDisabled: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
-  },
-  disabledText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '600',
   },
   inputIcon: {
     marginRight: 10,
