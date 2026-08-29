@@ -29,7 +29,7 @@ export const BottomNavBar = () => {
               onPress={() => setActiveTab(tab.id)}
               activeOpacity={0.7}
             >
-              <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
+              <View style={styles.iconContainer}>
                 <Ionicons
                   name={isActive ? tab.activeIcon : tab.icon}
                   size={24}
@@ -82,10 +82,6 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 15,
-  },
-  iconContainerActive: {
-    backgroundColor: '#EFF6FF',
   },
   tabLabel: {
     fontSize: 11,
