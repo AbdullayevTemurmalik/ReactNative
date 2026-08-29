@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PRODUCTS } from '../data/products';
 import { TRANSLATIONS } from '../utils/translations';
+import { formatPhoneNumber } from '../utils/formatters';
 
 const AppContext = createContext();
 
