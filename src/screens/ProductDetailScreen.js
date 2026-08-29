@@ -11,7 +11,6 @@ import {
   Dimensions,
   Animated,
   PanResponder,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
@@ -108,6 +107,22 @@ export const ProductDetailScreen = () => {
     })
   ).current;
 
+  // Eng tepada turib pastga tortganda oynani yopish
+  const handleScrollEndDrag = (e) => {
+    const offsetY = e.nativeEvent.contentOffset.y;
+    const velocityY = e.nativeEvent.velocity ? e.nativeEvent.velocity.y : 0;
+    if (offsetY < -30 || velocityY < -0.3) {
+      handleClose();
+    }
+  };
+
+  const handleScroll = (e) => {
+    const offsetY = e.nativeEvent.contentOffset.y;
+    if (offsetY < -60) {
+      handleClose();
+    }
+  };
+
   const handleShare = async () => {
     if (!displayProduct) return;
     try {
@@ -137,7 +152,7 @@ export const ProductDetailScreen = () => {
       onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        {/* Orqa qorong'u fon (bosilganda yopiladi, ScrollView ga xalaqit bermaydi) */}
+        {/* Orqa qorong'u fon (bosilganda yopiladi) */}
         <TouchableOpacity
           style={StyleSheet.absoluteFillObject}
           activeOpacity={1}
@@ -153,7 +168,7 @@ export const ProductDetailScreen = () => {
             },
           ]}
         >
-          {/* Tutqich va yuqori navigatsiya paneli (Faqat tepasi gesture ushlaydi) */}
+          {/* Tutqich va yuqori navigatsiya paneli */}
           <View {...panResponder.panHandlers} style={styles.dragHandleArea}>
             <View style={styles.handle} />
 
@@ -200,14 +215,16 @@ export const ProductDetailScreen = () => {
             </View>
           </View>
 
-          {/* 100% toza, hech qachon qotmaydigan Native ScrollView */}
+          {/* 100% toza, tepadan pastga tortilganda ham yopiladigan ScrollView */}
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            overScrollMode={Platform.OS === 'android' ? 'never' : 'auto'}
-            bounces={Platform.OS === 'ios'}
+            bounces={true}
+            scrollEventThrottle={16}
+            onScroll={handleScroll}
+            onScrollEndDrag={handleScrollEndDrag}
           >
             {/* Mahsulot Rasmi */}
             <View style={styles.imageContainer}>
@@ -271,7 +288,7 @@ export const ProductDetailScreen = () => {
                     </Text>
                   )}
                   <Text style={styles.price}>
-                    {formatPrice(displayProduct.price)}
+                        {formatPrice(displayProduct.price)}
                   </Text>
                 </View>
                 {savings > 0 && (
