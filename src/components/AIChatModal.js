@@ -11,12 +11,10 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Animated,
-  Keyboard,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sendGeminiMessage } from '../services/geminiAi';
 import { useApp } from '../context/AppContext';
 
@@ -31,26 +29,7 @@ const SUGGESTED_QUESTIONS = [
 
 export const AIChatModal = ({ visible, onClose }) => {
   const { language } = useApp();
-  const insets = useSafeAreaInsets();
   const isRu = language === 'ru';
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
-  const bottomInputPadding = isKeyboardVisible
-    ? 10
-    : Platform.OS === 'android'
-    ? Math.max(insets.bottom, 48)
-    : Math.max(insets.bottom, 16);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',
@@ -79,71 +58,92 @@ export const AIChatModal = ({ visible, onClose }) => {
           }
         }
       } catch (e) {
-        console.log('Error loading AI chat history:', e);
+        console.log('Chat history load error:', e);
       }
     };
-
     if (visible) {
       loadChatHistory();
     }
   }, [visible]);
 
-  // Xabarlarni AsyncStorage ga saqlash
-  const saveMessages = async (newMessages) => {
+  // Xabarlar yangilanganda AsyncStorage ga saqlash
+  const saveChatHistory = async (newMessages) => {
     try {
-      await AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(newMessages));
+      await AsyncStorage.setItem(
+        CHAT_STORAGE_KEY,
+        JSON.stringify(newMessages.slice(-20))
+      );
     } catch (e) {
-      console.log('Error saving AI chat history:', e);
+      console.log('Chat history save error:', e);
     }
   };
 
-  // Pastga avtomatik scroll qilish
   const scrollToBottom = () => {
-    setTimeout(() => {
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollToEnd({ animated: true });
-      }
-    }, 100);
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [messages, isLoading]);
 
   // Xabar yuborish
   const handleSend = async (customText = null) => {
-    const textToSend = (customText || inputText).trim();
-    if (!textToSend || isLoading) return;
+    const query = (customText || inputText || '').trim();
+    if (!query || isLoading) return;
 
-    const userMessage = {
+    const userMsg = {
       id: 'msg-' + Date.now(),
-      text: textToSend,
+      text: query,
       isUser: true,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    const updatedWithUser = [...messages, userMessage];
+    const updatedWithUser = [...messages, userMsg];
     setMessages(updatedWithUser);
     setInputText('');
     setIsLoading(true);
-    scrollToBottom();
-    saveMessages(updatedWithUser);
+    saveChatHistory(updatedWithUser);
 
-    // Gemini API ga so'rov yuborish
-    const result = await sendGeminiMessage(textToSend, updatedWithUser);
+    try {
+      const response = await sendGeminiMessage(query, updatedWithUser);
 
-    const aiMessage = {
-      id: 'msg-' + (Date.now() + 1),
-      text: result.success ? result.reply : result.error,
-      isUser: false,
-      isError: !result.success,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
+      const aiMsg = {
+        id: 'msg-ai-' + Date.now(),
+        text: response.success
+          ? response.reply
+          : response.error || (isRu ? 'Произошла ошибка, попробуйте еще раз.' : 'Xatolik yuz berdi, qaytadan urinib ko\'ring.'),
+        isUser: false,
+        isError: !response.success,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
 
-    const finalMessages = [...updatedWithUser, aiMessage];
-    setMessages(finalMessages);
-    setIsLoading(false);
-    scrollToBottom();
-    saveMessages(finalMessages);
+      const finalMessages = [...updatedWithUser, aiMsg];
+      setMessages(finalMessages);
+      saveChatHistory(finalMessages);
+    } catch (error) {
+      const errorMsg = {
+        id: 'msg-err-' + Date.now(),
+        text: isRu
+          ? 'Произошла ошибка подключения. Проверьте интернет-соединение.'
+          : 'Internet bilan aloqa uzildi. Iltimos, internetni tekshirib qayta urinib ko\'ring.',
+        isUser: false,
+        isError: true,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      const finalMessages = [...updatedWithUser, errorMsg];
+      setMessages(finalMessages);
+      saveChatHistory(finalMessages);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Chat tarixini tozalash
+  // Suhbat tarixini tozalash
   const handleClearChat = () => {
     Alert.alert(
       isRu ? 'Очистить историю' : 'Tarixni tozalash',
@@ -173,172 +173,180 @@ export const AIChatModal = ({ visible, onClose }) => {
       transparent={false}
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Yuqori Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.botAvatar}>
-              <Ionicons name="sparkles" size={20} color="#FFFFFF" />
-            </View>
-            <View>
-              <Text style={styles.headerTitle}>SmartBozor AI</Text>
-              <View style={styles.onlineStatusRow}>
-                <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>Gemini AI • Online</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.headerIconBtn}
-              onPress={handleClearChat}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="trash-outline" size={20} color="#64748B" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={onClose}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="close" size={22} color="#0F172A" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Xabarlar ro'yxati */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.chatArea}
-          contentContainerStyle={styles.chatScrollContent}
-          showsVerticalScrollIndicator={false}
-          onContentSizeChange={scrollToBottom}
+      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* Taklif etilayotgan tezkor savollar (faqat 1 ta xabar bo'lganda) */}
-          {messages.length <= 1 && (
-            <View style={styles.suggestionsContainer}>
-              <Text style={styles.suggestionsTitle}>
-                {isRu ? '💡 Популярные вопросы:' : '💡 Tezkor savollar:'}
-              </Text>
-              <View style={styles.suggestionsGrid}>
-                {SUGGESTED_QUESTIONS.map((q, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={styles.suggestionPill}
-                    onPress={() => handleSend(q)}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={styles.suggestionText}>{q}</Text>
-                  </TouchableOpacity>
-                ))}
+          {/* Yuqori Header */}
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={styles.botAvatar}>
+                <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+              </View>
+              <View>
+                <Text style={styles.headerTitle}>SmartBozor AI</Text>
+                <View style={styles.onlineStatusRow}>
+                  <View style={styles.onlineDot} />
+                  <Text style={styles.onlineText}>Gemini AI • Online</Text>
+                </View>
               </View>
             </View>
-          )}
 
-          {/* Barcha xabarlar */}
-          {messages.map((item) => {
-            return (
-              <View
-                key={item.id}
-                style={[
-                  styles.messageRow,
-                  item.isUser ? styles.messageRowUser : styles.messageRowAi,
-                ]}
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={styles.headerIconBtn}
+                onPress={handleClearChat}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                {!item.isUser && (
-                  <View style={styles.aiMiniAvatar}>
-                    <Ionicons name="sparkles" size={12} color="#2563EB" />
-                  </View>
-                )}
+                <Ionicons name="trash-outline" size={18} color="#64748B" />
+              </TouchableOpacity>
 
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={onClose}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={20} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Xabarlar ro'yxati */}
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.chatArea}
+            contentContainerStyle={styles.chatScrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={scrollToBottom}
+          >
+            {/* Taklif etilayotgan tezkor savollar (faqat 1 ta xabar bo'lganda) */}
+            {messages.length <= 1 && (
+              <View style={styles.suggestionsContainer}>
+                <Text style={styles.suggestionsTitle}>
+                  {isRu ? '💡 Популярные вопросы:' : '💡 Tezkor savollar:'}
+                </Text>
+                <View style={styles.suggestionsGrid}>
+                  {SUGGESTED_QUESTIONS.map((q, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.suggestionPill}
+                      onPress={() => handleSend(q)}
+                      activeOpacity={0.75}
+                    >
+                      <Text style={styles.suggestionText}>{q}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Barcha xabarlar */}
+            {messages.map((item) => {
+              return (
                 <View
+                  key={item.id}
                   style={[
-                    styles.bubble,
-                    item.isUser ? styles.bubbleUser : styles.bubbleAi,
-                    item.isError && styles.bubbleError,
+                    styles.messageRow,
+                    item.isUser ? styles.messageRowUser : styles.messageRowAi,
                   ]}
                 >
-                  <Text
+                  {!item.isUser && (
+                    <View style={styles.aiMiniAvatar}>
+                      <Ionicons name="sparkles" size={12} color="#2563EB" />
+                    </View>
+                  )}
+
+                  <View
                     style={[
-                      styles.messageText,
-                      item.isUser ? styles.messageTextUser : styles.messageTextAi,
+                      styles.bubble,
+                      item.isUser ? styles.bubbleUser : styles.bubbleAi,
+                      item.isError && styles.bubbleError,
                     ]}
                   >
-                    {item.text}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.messageTime,
-                      item.isUser ? styles.messageTimeUser : styles.messageTimeAi,
-                    ]}
-                  >
-                    {item.time}
+                    <Text
+                      style={[
+                        styles.messageText,
+                        item.isUser ? styles.messageTextUser : styles.messageTextAi,
+                      ]}
+                    >
+                      {item.text}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.messageTime,
+                        item.isUser ? styles.messageTimeUser : styles.messageTimeAi,
+                      ]}
+                    >
+                      {item.time}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+
+            {/* AI yozayotgandagi loading indikatori */}
+            {isLoading && (
+              <View style={[styles.messageRow, styles.messageRowAi]}>
+                <View style={styles.aiMiniAvatar}>
+                  <Ionicons name="sparkles" size={12} color="#2563EB" />
+                </View>
+                <View style={[styles.bubble, styles.bubbleAi, styles.typingBubble]}>
+                  <ActivityIndicator size="small" color="#2563EB" />
+                  <Text style={styles.typingText}>
+                    {isRu ? 'AI печатает ответ...' : 'AI javob tayyorlamoqda...'}
                   </Text>
                 </View>
               </View>
-            );
-          })}
-
-          {/* AI yozayotgandagi loading indikatori */}
-          {isLoading && (
-            <View style={[styles.messageRow, styles.messageRowAi]}>
-              <View style={styles.aiMiniAvatar}>
-                <Ionicons name="sparkles" size={12} color="#2563EB" />
-              </View>
-              <View style={[styles.bubble, styles.bubbleAi, styles.typingBubble]}>
-                <ActivityIndicator size="small" color="#2563EB" />
-                <Text style={styles.typingText}>
-                  {isRu ? 'AI печатает ответ...' : 'AI javob tayyorlamoqda...'}
-                </Text>
-              </View>
-            </View>
-          )}
-        </ScrollView>
-
-        {/* Pastki xabar kiritish paneli (3 ta tugmaga xalaqit bermaydigan qilib himoyalangan) */}
-        <View style={[styles.inputBar, { paddingBottom: bottomInputPadding }]}>
-          <TextInput
-            style={styles.textInput}
-            placeholder={
-              isRu ? 'Задайте вопрос AI...' : 'AI ga savol bering...'
-            }
-            placeholderTextColor="#94A3B8"
-            value={inputText}
-            onChangeText={setInputText}
-            multiline={true}
-            maxLength={1000}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.sendBtn,
-              (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
-            ]}
-            onPress={() => handleSend()}
-            disabled={!inputText.trim() || isLoading}
-            activeOpacity={0.8}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Ionicons name="send" size={18} color="#FFFFFF" />
             )}
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+          </ScrollView>
+
+          {/* Pastki xabar kiritish paneli */}
+          <View style={styles.inputBar}>
+            <TextInput
+              style={styles.textInput}
+              placeholder={
+                isRu ? 'Задайте вопрос AI...' : 'AI ga savol bering...'
+              }
+              placeholderTextColor="#94A3B8"
+              value={inputText}
+              onChangeText={setInputText}
+              multiline={false}
+              returnKeyType="send"
+              onSubmitEditing={() => handleSend()}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                (!inputText.trim() || isLoading) && styles.sendBtnDisabled,
+              ]}
+              onPress={() => handleSend()}
+              disabled={!inputText.trim() || isLoading}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons name="send" size={17} color="#FFFFFF" />
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  keyboardContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
@@ -347,16 +355,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 54 : 16,
-    paddingBottom: 14,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -364,20 +371,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   botAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#2563EB',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
   },
   headerTitle: {
-    fontSize: 16.5,
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
   },
@@ -404,17 +406,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
@@ -423,37 +425,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chatScrollContent: {
-    padding: 16,
-    paddingBottom: 20,
-    gap: 12,
+    padding: 14,
+    paddingBottom: 16,
+    gap: 10,
   },
   suggestionsContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 16,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   suggestionsTitle: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '800',
     color: '#334155',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   suggestionsGrid: {
-    gap: 8,
+    gap: 6,
   },
   suggestionPill: {
     backgroundColor: '#EFF6FF',
     paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#BFDBFE',
   },
   suggestionText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
     color: '#1D4ED8',
   },
@@ -470,35 +472,31 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   aiMiniAvatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#BFDBFE',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   bubble: {
     maxWidth: '82%',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    borderRadius: 16,
   },
   bubbleUser: {
     backgroundColor: '#2563EB',
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: 3,
   },
   bubbleAi: {
     backgroundColor: '#FFFFFF',
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: 3,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
     elevation: 1,
   },
   bubbleError: {
@@ -506,8 +504,8 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13.5,
+    lineHeight: 19,
   },
   messageTextUser: {
     color: '#FFFFFF',
@@ -518,8 +516,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   messageTime: {
-    fontSize: 10,
-    marginTop: 4,
+    fontSize: 9.5,
+    marginTop: 3,
     alignSelf: 'flex-end',
   },
   messageTimeUser: {
@@ -532,49 +530,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   typingText: {
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#64748B',
     fontStyle: 'italic',
   },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    gap: 10,
+    gap: 8,
   },
   textInput: {
     flex: 1,
     backgroundColor: '#F1F5F9',
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     fontSize: 14,
     color: '#0F172A',
-    maxHeight: 100,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   sendBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#2563EB',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
   },
   sendBtnDisabled: {
-    backgroundColor: '#94A3B8',
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: '#CBD5E1',
   },
 });
