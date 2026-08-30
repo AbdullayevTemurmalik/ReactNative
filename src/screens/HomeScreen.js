@@ -23,6 +23,7 @@ export const HomeScreen = () => {
     setSearchQuery,
     setSelectedCategoryKey,
     showToast,
+    setIsAiChatVisible,
     t,
     language,
   } = useApp();
@@ -60,6 +61,39 @@ export const HomeScreen = () => {
           />
         }
       >
+        {/* AI Yordamchi interaktiv banneri */}
+        {!searchQuery && selectedCategoryKey === 'cat_all' && (
+          <TouchableOpacity
+            style={styles.aiBanner}
+            onPress={() => setIsAiChatVisible(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.aiBannerLeft}>
+              <View style={styles.aiIconBadge}>
+                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.aiBannerTextWrap}>
+                <View style={styles.aiTitleRow}>
+                  <Text style={styles.aiBannerTitle}>
+                    {language === 'ru' ? 'AI-Помощник SmartBozor' : 'SmartBozor AI Yordamchi'}
+                  </Text>
+                  <View style={styles.geminiTag}>
+                    <Text style={styles.geminiTagText}>Gemini AI</Text>
+                  </View>
+                </View>
+                <Text style={styles.aiBannerSubtitle}>
+                  {language === 'ru'
+                    ? 'Помогу выбрать лучший товар и отвечу на любые вопросы'
+                    : 'Eng yaxshi tovarlarni tanlashda va har qanday savolingizga yordam beraman'}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.aiArrowBtn}>
+              <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Banner (faqat qidiruv yo'q paytda ko'rinadi) */}
         {!searchQuery && selectedCategoryKey === 'cat_all' && <PromoBanner />}
 
@@ -110,6 +144,16 @@ export const HomeScreen = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Floating AI Yordamchi FAB tugmasi */}
+      <TouchableOpacity
+        style={styles.floatingAiBtn}
+        onPress={() => setIsAiChatVisible(true)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+        <Text style={styles.floatingAiText}>AI</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -120,21 +164,98 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    paddingBottom: 60,
+    paddingBottom: 90,
+  },
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  aiBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  aiIconBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  aiBannerTextWrap: {
+    flex: 1,
+  },
+  aiTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  aiBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E3A8A',
+  },
+  geminiTag: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  geminiTagText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#2563EB',
+  },
+  aiBannerSubtitle: {
+    fontSize: 11.5,
+    color: '#3B82F6',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  aiArrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 6,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 12,
+    marginTop: 18,
+    marginBottom: 14,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
     color: '#0F172A',
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   searchResultHint: {
     fontSize: 12,
@@ -187,5 +308,30 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
+  },
+  floatingAiBtn: {
+    position: 'absolute',
+    bottom: 20,
+    right: 18,
+    backgroundColor: '#2563EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 25,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1.5,
+    borderColor: '#60A5FA',
+  },
+  floatingAiText: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

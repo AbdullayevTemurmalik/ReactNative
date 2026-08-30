@@ -33,6 +33,7 @@ export const ProfileScreen = () => {
     setActiveTab,
     updateProfile,
     checkForUpdates,
+    setIsAiChatVisible,
     t,
     language,
   } = useApp();
@@ -318,6 +319,24 @@ export const ProfileScreen = () => {
               <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
             </TouchableOpacity>
 
+            {/* SmartBozor AI Yordamchi (Gemini AI) */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => setIsAiChatVisible(true)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBg, { backgroundColor: '#2563EB15' }]}>
+                <Ionicons name="sparkles" size={20} color="#2563EB" />
+              </View>
+              <Text style={styles.menuItemLabel}>
+                {isRu ? 'AI-Помощник SmartBozor' : 'SmartBozor AI Yordamchi'}
+              </Text>
+              <View style={[styles.otaBadge, { backgroundColor: '#DBEAFE' }]}>
+                <Text style={[styles.otaBadgeText, { color: '#2563EB' }]}>Gemini AI</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+            </TouchableOpacity>
+
             {/* Qo'llab-quvvatlash (@TM_Backdev) */}
             <TouchableOpacity
               style={styles.menuItem}
@@ -371,7 +390,7 @@ export const ProfileScreen = () => {
         </View>
 
         {/* Versiya */}
-        <Text style={styles.versionText}>SmartBozor Mobile v1.20.0 (Expo SDK 54)</Text>
+        <Text style={styles.versionText}>SmartBozor Mobile v1.21.0 (Expo SDK 54)</Text>
       </ScrollView>
 
       {/* MODALLAR */}

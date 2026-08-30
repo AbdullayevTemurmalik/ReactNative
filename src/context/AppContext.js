@@ -65,6 +65,7 @@ export const AppProvider = ({ children }) => {
   const [users, setUsers] = useState(INITIAL_USERS);
   const [currentUser, setCurrentUser] = useState(null); // null | { isGuest: true } | { id, name, phone }
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
+  const [isAiChatVisible, setIsAiChatVisible] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
 
   const [notifications, setNotifications] = useState([
@@ -819,6 +820,8 @@ export const AppProvider = ({ children }) => {
     currentUser,
     isAuthModalVisible,
     setIsAuthModalVisible,
+    isAiChatVisible,
+    setIsAiChatVisible,
     continueAsGuest,
     register,
     login,

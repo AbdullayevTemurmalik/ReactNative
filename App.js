@@ -17,6 +17,7 @@ import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
 import { BottomNavBar } from './src/components/BottomNavBar';
 import { Toast } from './src/components/Toast';
 import { AuthModal } from './src/components/AuthModal';
+import { AIChatModal } from './src/components/AIChatModal';
 
 function MainNavigator() {
   const {
@@ -24,6 +25,8 @@ function MainNavigator() {
     activeTab,
     isAuthModalVisible,
     setIsAuthModalVisible,
+    isAiChatVisible,
+    setIsAiChatVisible,
   } = useApp();
 
   if (isInitializing) {
@@ -56,6 +59,12 @@ function MainNavigator() {
       <AuthModal
         visible={isAuthModalVisible}
         onClose={() => setIsAuthModalVisible(false)}
+      />
+
+      {/* SMARTBOZOR AI YORDAMCHI (GEMINI AI) MODAL */}
+      <AIChatModal
+        visible={isAiChatVisible}
+        onClose={() => setIsAiChatVisible(false)}
       />
     </SafeAreaView>
   );

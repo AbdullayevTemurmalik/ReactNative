@@ -5,7 +5,15 @@ import { useApp } from '../context/AppContext';
 import { NotificationsModal } from './NotificationsModal';
 
 export const Header = ({ title, showBack = false, onBack }) => {
-  const { cartUniqueCount, favorites, unreadNotifsCount, setActiveTab, t, language } = useApp();
+  const {
+    cartUniqueCount,
+    favorites,
+    unreadNotifsCount,
+    setActiveTab,
+    setIsAiChatVisible,
+    t,
+    language,
+  } = useApp();
   const [isNotifsOpen, setIsNotifsOpen] = useState(false);
 
   return (
@@ -32,6 +40,15 @@ export const Header = ({ title, showBack = false, onBack }) => {
         </View>
 
         <View style={styles.rightSection}>
+          {/* SmartBozor AI Yordamchi tugmasi */}
+          <TouchableOpacity
+            style={[styles.iconBtn, styles.aiBtn]}
+            onPress={() => setIsAiChatVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="sparkles" size={18} color="#2563EB" />
+          </TouchableOpacity>
+
           {/* Bildirishnomalar qo'ng'iroqchasi */}
           <TouchableOpacity
             style={styles.iconBtn}
@@ -158,6 +175,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
+  },
+  aiBtn: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
   },
   cartBtn: {
     backgroundColor: '#2563EB',
