@@ -32,7 +32,7 @@ export const AIChatModal = ({ visible, onClose }) => {
   const { language } = useApp();
   const insets = useSafeAreaInsets();
   const isRu = language === 'ru';
-  const bottomInputPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 12);
+  const bottomInputPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 14 : 10);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',
