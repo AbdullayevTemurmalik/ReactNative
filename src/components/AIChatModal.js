@@ -24,7 +24,7 @@ const SUGGESTED_QUESTIONS = [
   '🔥 Eng yaxshi smartfonlar qaysilar?',
   '💻 Noutbuk tanlashda yordam ber',
   '🚚 Yetkazib berish shartlari qanday?',
-  '🛡️ Kafolat va to\'lov turlari qanaqa?',
+  '👨‍💻 Bu ilovani kim yaratgan?',
 ];
 
 export const AIChatModal = ({ visible, onClose }) => {
