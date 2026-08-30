@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Keyboard,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,7 +33,24 @@ export const AIChatModal = ({ visible, onClose }) => {
   const { language } = useApp();
   const insets = useSafeAreaInsets();
   const isRu = language === 'ru';
-  const bottomInputPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 14 : 10);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const bottomInputPadding = isKeyboardVisible
+    ? 10
+    : Platform.OS === 'android'
+    ? Math.max(insets.bottom, 48)
+    : Math.max(insets.bottom, 16);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',

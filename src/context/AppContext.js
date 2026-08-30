@@ -45,16 +45,15 @@ const DEFAULT_NOTIFICATIONS = [
   },
 ];
 
-const INITIAL_USER = {
-  id: 'user-default',
-  name: 'Temur Malik',
-  phone: '+998 90 123 45 67',
-  password: 'password123',
-  avatar: '🦁',
-  createdAt: new Date().toISOString(),
-};
-
-const INITIAL_USERS = [INITIAL_USER];
+const INITIAL_USERS = [
+  {
+    id: 'user-default',
+    name: 'Temur Malik',
+    phone: '+998 90 123 45 67',
+    password: 'password123',
+    createdAt: new Date().toISOString(),
+  },
+];
 
 export const AppProvider = ({ children }) => {
   const [products] = useState(PRODUCTS);
@@ -147,16 +146,16 @@ export const AppProvider = ({ children }) => {
         const parsedOrders = safeJsonParse(storedOrders, []);
         const parsedAddresses = safeJsonParse(storedAddresses, DEFAULT_ADDRESSES);
         const parsedNotifs = safeJsonParse(storedNotifications, DEFAULT_NOTIFICATIONS);
-        const parsedUsers = safeJsonParse(storedUsers, INITIAL_USERS);
-        const parsedUser = safeJsonParse(storedCurrentUser, INITIAL_USER);
+        const parsedUsers = safeJsonParse(storedUsers, []);
+        const parsedUser = safeJsonParse(storedCurrentUser, null);
 
         setCart(Array.isArray(parsedCart) ? parsedCart : []);
         setFavorites(Array.isArray(parsedFavs) ? parsedFavs : []);
         setOrders(Array.isArray(parsedOrders) ? parsedOrders : []);
         setAddresses(Array.isArray(parsedAddresses) ? parsedAddresses : DEFAULT_ADDRESSES);
         setNotifications(Array.isArray(parsedNotifs) ? parsedNotifs : DEFAULT_NOTIFICATIONS);
-        setUsers(Array.isArray(parsedUsers) && parsedUsers.length > 0 ? parsedUsers : INITIAL_USERS);
-        setCurrentUser(parsedUser && typeof parsedUser === 'object' ? parsedUser : INITIAL_USER);
+        setUsers(Array.isArray(parsedUsers) ? parsedUsers : []);
+        setCurrentUser(parsedUser && typeof parsedUser === 'object' ? parsedUser : null);
 
         if (storedLang === 'uz' || storedLang === 'ru') {
           setLanguageState(storedLang);
