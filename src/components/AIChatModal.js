@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { sendGeminiMessage } from '../services/geminiAi';
 import { useApp } from '../context/AppContext';
 
@@ -29,7 +30,9 @@ const SUGGESTED_QUESTIONS = [
 
 export const AIChatModal = ({ visible, onClose }) => {
   const { language } = useApp();
+  const insets = useSafeAreaInsets();
   const isRu = language === 'ru';
+  const bottomInputPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 12);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',
@@ -281,8 +284,8 @@ export const AIChatModal = ({ visible, onClose }) => {
           )}
         </ScrollView>
 
-        {/* Pastki xabar kiritish paneli */}
-        <View style={styles.inputBar}>
+        {/* Pastki xabar kiritish paneli (3 ta tugmaga xalaqit bermaydigan qilib himoyalangan) */}
+        <View style={[styles.inputBar, { paddingBottom: bottomInputPadding }]}>
           <TextInput
             style={styles.textInput}
             placeholder={

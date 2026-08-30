@@ -8,7 +8,7 @@ export const BottomNavBar = () => {
   const { activeTab, setActiveTab, cartUniqueCount, favorites, t } = useApp();
   const insets = useSafeAreaInsets();
 
-  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 18 : 12);
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 14);
 
   const TABS = [
     { id: 'home', labelKey: 'nav_home', icon: 'home-outline', activeIcon: 'home' },
