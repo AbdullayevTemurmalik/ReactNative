@@ -11,6 +11,7 @@ import {
   Dimensions,
   Animated,
   PanResponder,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -61,9 +62,10 @@ export const ProductDetailScreen = () => {
       panY.setValue(SCREEN_HEIGHT);
       Animated.spring(panY, {
         toValue: 0,
-        bounciness: 0,
-        speed: 20,
         useNativeDriver: true,
+        ...(Platform.OS === 'ios'
+          ? { damping: 20, mass: 0.9, stiffness: 140 }
+          : { speed: 22, bounciness: 0 }),
       }).start();
     }
   }, [selectedProduct]);

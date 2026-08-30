@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,7 +10,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { formatPrice, getDiscountPercent } from '../utils/formatters';
 import { useApp } from '../context/AppContext';
-import { ConfirmModal } from './ConfirmModal';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 52) / 2;
@@ -19,19 +18,9 @@ export const ProductCard = memo(({ product }) => {
   const { setSelectedProduct, addToCart, toggleFavorite, isFavorite, t, language } = useApp();
   const favorite = isFavorite(product.id);
   const discount = getDiscountPercent(product.oldPrice, product.price);
-  const [isConfirmRemoveOpen, setIsConfirmRemoveOpen] = useState(false);
 
   const handleHeartPress = () => {
-    if (favorite) {
-      setIsConfirmRemoveOpen(true);
-    } else {
-      toggleFavorite(product.id);
-    }
-  };
-
-  const handleConfirmRemove = () => {
     toggleFavorite(product.id);
-    setIsConfirmRemoveOpen(false);
   };
 
   return (
@@ -104,24 +93,6 @@ export const ProductCard = memo(({ product }) => {
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
-
-      {/* SEVIMLILARDAN O'CHIRISH MODALI */}
-      <ConfirmModal
-        visible={isConfirmRemoveOpen}
-        title={language === 'ru' ? 'Удаление из избранного' : 'Sevimlilardan o\'chirish'}
-        message={
-          language === 'ru'
-            ? `Вы действительно хотите удалить "${product.name}" из избранного?`
-            : `Rostdan ham "${product.name}" mahsulotini sevimlilardan olib tashlamoqchimisiz?`
-        }
-        confirmText={t('confirm_delete_btn')}
-        cancelText={t('cancel_btn')}
-        onConfirm={handleConfirmRemove}
-        onCancel={() => setIsConfirmRemoveOpen(false)}
-        icon="heart-dislike-outline"
-        isDestructive={true}
-      />
-    </>
   );
 });
 

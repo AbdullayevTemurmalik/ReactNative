@@ -23,8 +23,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.temurmalik.shopapp",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "SmartBozor profil rasmingizni yuklash uchun galereyangizdan foydalanadi.",
-        "NSCameraUsageDescription": "SmartBozor profil rasmingizni olish uchun kameradan foydalanadi."
+        "NSPhotoLibraryUsageDescription": "SmartBozor profil rasmingizni yuklash va saqlash uchun galereyangizdan foydalanadi.",
+        "NSCameraUsageDescription": "SmartBozor profil rasmingizni olish uchun kameradan foydalanadi.",
+        "NSLocationWhenInUseUsageDescription": "SmartBozor buyurtmalaringizni tez va aniq yetkazib berish uchun geolokatsiyangizdan foydalanadi.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIRequiresFullScreen": false
       }
     },
     "android": {
