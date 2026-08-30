@@ -95,7 +95,7 @@ export const ProfileScreen = () => {
               onPress={() => setIsAvatarPickerOpen(true)}
               activeOpacity={0.8}
             >
-              {currentUser.avatar ? (
+              {currentUser?.avatar ? (
                 currentUser.avatar.includes('/') || currentUser.avatar.startsWith('file:') || currentUser.avatar.startsWith('http') || currentUser.avatar.startsWith('data:') ? (
                   <Image
                     source={{ uri: currentUser.avatar }}
@@ -109,7 +109,7 @@ export const ProfileScreen = () => {
               ) : (
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
-                    {currentUser.name
+                    {currentUser?.name
                       ? currentUser.name
                           .split(' ')
                           .map((n) => n[0])
@@ -126,8 +126,8 @@ export const ProfileScreen = () => {
             </TouchableOpacity>
 
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{currentUser.name}</Text>
-              <Text style={styles.userPhone}>{currentUser.phone}</Text>
+              <Text style={styles.userName}>{currentUser?.name || 'Foydalanuvchi'}</Text>
+              <Text style={styles.userPhone}>{currentUser?.phone || '+998 90 123 45 67'}</Text>
             </View>
 
             <View style={styles.userCardActions}>
