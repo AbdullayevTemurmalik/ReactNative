@@ -24,9 +24,8 @@ export const ProductCard = memo(({ product }) => {
   };
 
   return (
-    <>
-      <TouchableOpacity
-        style={styles.card}
+    <TouchableOpacity
+      style={styles.card}
         onPress={() => setSelectedProduct(product)}
         activeOpacity={0.88}
       >
