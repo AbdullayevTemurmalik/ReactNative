@@ -21,67 +21,45 @@ const decodeSecret = (b64) => {
   return str;
 };
 
-// Shifrlangan Gemini AI kalitlari (Multi-key redundancy)
+// Gemini AI kalitlari (Multi-key redundancy)
 const GEMINI_KEYS = [
   decodeSecret('QVEuQWI4Uk42SUVXdFB5bzJORnNGbTdYcDVVbkNRck5oN0dGRXVOa0VxWkR1a055VzRxLUE='),
   decodeSecret('QVEuQWI4Uk42STlsbmtvYjQ1aTVUT1Y1aFkzVS1TTk9GYm9HSDB5LUk3Umh1Um1IX3pZd2c='),
 ];
 
-const MODELS = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+// Eng tezkor va barqaror Gemini modellari
+const MODELS = ['gemini-3.1-flash-lite-preview', 'gemini-3.5-flash', 'gemini-3.6-flash'];
 
 function getStoreContext() {
-  const productList = PRODUCTS.map(
-    (p, i) =>
-      `${i + 1}. ${p.name} - Narxi: ${formatPrice(p.price)}${
-        p.oldPrice ? ` (Eski narx: ${formatPrice(p.oldPrice)})` : ''
-      }, Reyting: ${p.rating} ⭐ (${p.reviewsCount} ta sharh). Toifa: ${p.category}. Tavsif: ${
-        p.description
-      }`
-  ).join('\n');
+  const topProducts = PRODUCTS.slice(0, 10).map(
+    (p, i) => `${i + 1}. ${p.name} - ${formatPrice(p.price)} (${p.category})`
+  ).join(', ');
 
-  return `
-Siz SmartBozor internet-do'konining rasmiy aqlli AI maslahatchisisiz (SmartBozor AI Yordamchi).
-Sizning vazifalaringiz:
-1. Xaridorlarga mahsulot tanlashda, solishtirishda, tavsif va xususiyatlarni tushuntirishda yordam berish.
-2. Do'kon qoidalari: O'zbekiston bo'ylab 1 kunda bepul yetkazib beriladi, 100% rasmiy kafolat beriladi, to'lov turlari: Click, Payme, Naqd yoki Karta orqali qabul qilinadi.
-3. Shuningdek, xaridor bergan har qanday umumiy savolga (texnologiya, telefonlar, maslahatlar, taqqoslashlar, dasturlash, hayotiy va boshqa barcha mavzular) aqlli, to'liq, ravon va aniq javob berish.
-4. Foydalanuvchi qaysi tilda yozsa (O'zbek lotin, O'zbek krill, Ruscha, Inglizcha), xuddi shu tilda muloyim va chiroyli javob bering. Emojilardan o'rnida foydalaning.
-
-SmartBozor katalogidagi mavjud mahsulotlar:
-${productList}
-`;
+  return `Siz SmartBozor internet-do'konining rasmiy aqlli AI yordamchisiz.
+Qoidalar:
+- O'zbekiston bo'ylab 1 kunda bepul yetkaziladi. 100% rasmiy kafolat bor. To'lov: Click, Payme, Naqd.
+- Asosiy tovarlarimiz: ${topProducts}.
+- Foydalanuvchi qaysi tilda yozsa (O'zbek, Rus, Ingliz), o'sha tilda qisqa, aniq, muloyim va foydali javob bering.
+- Har qanday umumiy savolga ham aqlli va do'stona javob bering.`;
 }
 
 export async function sendGeminiMessage(userMessage, conversationHistory = []) {
   const systemInstruction = getStoreContext();
 
-  const contents = [
-    {
-      role: 'user',
-      parts: [
-        {
-          text: `[Tizim ko'rsatmasi]: ${systemInstruction}\n\nSalom, men SmartBozor xaridoriman.`,
-        },
-      ],
-    },
-    {
-      role: 'model',
-      parts: [
-        {
-          text: "Assalomu alaykum! SmartBozor rasmiy AI yordamchisiman 🛍️✨ Sizga qanday yordam bera olaman?",
-        },
-      ],
-    },
-  ];
+  // Suhbat tarixini qisqa va toza formatlash (oxirgi 4 ta xabar)
+  const contents = [];
+  const recentHistory = (conversationHistory || []).slice(-4);
 
-  const recentHistory = conversationHistory.slice(-8);
   recentHistory.forEach((msg) => {
-    contents.push({
-      role: msg.isUser ? 'user' : 'model',
-      parts: [{ text: msg.text }],
-    });
+    if (msg && msg.text && !msg.isError) {
+      contents.push({
+        role: msg.isUser ? 'user' : 'model',
+        parts: [{ text: msg.text }],
+      });
+    }
   });
 
+  // Hozirgi yangi savol
   contents.push({
     role: 'user',
     parts: [{ text: userMessage }],
@@ -97,19 +75,28 @@ export async function sendGeminiMessage(userMessage, conversationHistory = []) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 soniya timeout
+
         const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemInstruction }],
+            },
             contents,
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 1000,
+              maxOutputTokens: 400,
             },
           }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();
@@ -124,11 +111,15 @@ export async function sendGeminiMessage(userMessage, conversationHistory = []) {
         } else {
           const errData = await response.json().catch(() => ({}));
           lastError = errData.error?.message || `Status ${response.status}`;
-          console.log(`Gemini ${model} with Key ${keyIndex + 1} failed:`, lastError);
+          console.log(`Gemini ${model} Key ${keyIndex + 1} status:`, response.status, lastError);
         }
-      } catch (networkError) {
-        lastError = 'Internet aloqasi mavjud emas';
-        console.log('Network error connecting to Gemini:', networkError.message);
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          lastError = 'Javob berish vaqti tugadi';
+        } else {
+          lastError = 'Internet aloqasi mavjud emas';
+        }
+        console.log(`Gemini ${model} Key ${keyIndex + 1} error:`, err.message);
       }
     }
   }
@@ -137,7 +128,7 @@ export async function sendGeminiMessage(userMessage, conversationHistory = []) {
     success: false,
     error:
       lastError === 'Internet aloqasi mavjud emas'
-        ? '⚠️ Internet aloqasi mavjud emas. Iltimos, internetga ulanib qayta urinib ko\'ring.'
-        : '⚠️ AI Yordamchi xizmatida vaqtinchalik uzilish. Iltimos, bir ozdan so\'ng qayta urinib ko\'ring.',
+        ? "⚠️ Internet aloqasi mavjud emas. Iltimos, internetga ulanib qayta urinib ko'ring."
+        : "⚠️ AI Yordamchi tezkor javob bera olmadi. Iltimos, qaytadan savol bering.",
   };
 }
