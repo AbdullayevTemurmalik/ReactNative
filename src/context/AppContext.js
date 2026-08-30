@@ -52,6 +52,8 @@ const INITIAL_USERS = [
     name: 'Temur Malik',
     phone: '+998 90 123 45 67',
     password: 'password123',
+    avatar: '👨‍💻',
+    isGuest: false,
     createdAt: new Date().toISOString(),
   },
 ];
@@ -147,16 +149,20 @@ export const AppProvider = ({ children }) => {
         const parsedOrders = safeJsonParse(storedOrders, []);
         const parsedAddresses = safeJsonParse(storedAddresses, DEFAULT_ADDRESSES);
         const parsedNotifs = safeJsonParse(storedNotifications, DEFAULT_NOTIFICATIONS);
-        const parsedUsers = safeJsonParse(storedUsers, []);
-        const parsedUser = safeJsonParse(storedCurrentUser, null);
+        const initialUsersList = Array.isArray(parsedUsers) && parsedUsers.length > 0 ? parsedUsers : INITIAL_USERS;
+        const initialActiveUser = (parsedUser && typeof parsedUser === 'object') ? parsedUser : INITIAL_USERS[0];
 
         setCart(Array.isArray(parsedCart) ? parsedCart : []);
         setFavorites(Array.isArray(parsedFavs) ? parsedFavs : []);
         setOrders(Array.isArray(parsedOrders) ? parsedOrders : []);
         setAddresses(Array.isArray(parsedAddresses) ? parsedAddresses : DEFAULT_ADDRESSES);
         setNotifications(Array.isArray(parsedNotifs) ? parsedNotifs : DEFAULT_NOTIFICATIONS);
-        setUsers(Array.isArray(parsedUsers) ? parsedUsers : []);
-        setCurrentUser(parsedUser && typeof parsedUser === 'object' ? parsedUser : null);
+        setUsers(initialUsersList);
+        setCurrentUser(initialActiveUser);
+
+        if (!parsedUser) {
+          saveCurrentUserToStorage(initialActiveUser);
+        }
 
         if (storedLang === 'uz' || storedLang === 'ru') {
           setLanguageState(storedLang);
