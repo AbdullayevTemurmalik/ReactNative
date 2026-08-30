@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { ConfirmModal } from './ConfirmModal';
 import { sendGeminiMessage } from '../services/geminiAi';
 import { useApp } from '../context/AppContext';
 
@@ -28,8 +29,9 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export const AIChatModal = ({ visible, onClose }) => {
-  const { language } = useApp();
+  const { language, showToast } = useApp();
   const isRu = language === 'ru';
+  const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',
@@ -152,24 +154,19 @@ export const AIChatModal = ({ visible, onClose }) => {
     }
   };
 
-  // Suhbat tarixini tozalash
+  // Suhbat tarixini tozalash (Chiroyli Modal orqali)
   const handleClearChat = () => {
-    Alert.alert(
-      isRu ? 'Очистить историю' : 'Tarixni tozalash',
-      isRu
-        ? 'Вы действительно хотите очистить всю историю переписки с AI?'
-        : 'Haqiqatan ham AI bilan bo\'lgan barcha suhbat tarixini tozalamoqchimisiz?',
-      [
-        { text: isRu ? 'Отмена' : 'Bekor qilish', style: 'cancel' },
-        {
-          text: isRu ? 'Очистить' : 'Tozalash',
-          style: 'destructive',
-          onPress: async () => {
-            setMessages([defaultWelcomeMessage]);
-            await AsyncStorage.removeItem(CHAT_STORAGE_KEY);
-          },
-        },
-      ]
+    setIsConfirmClearOpen(true);
+  };
+
+  const handleConfirmClear = async () => {
+    setIsConfirmClearOpen(false);
+    setMessages([defaultWelcomeMessage]);
+    await AsyncStorage.removeItem(CHAT_STORAGE_KEY);
+    await AsyncStorage.removeItem('@smartbozor_pending_ai_query');
+    showToast(
+      isRu ? '🧹 История чата очищена' : '🧹 Suhbat tarixi muvaffaqiyatli tozalandi',
+      'info'
     );
   };
 
@@ -358,6 +355,23 @@ export const AIChatModal = ({ visible, onClose }) => {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* CHIROYLI MAXSUS TARIXNI TOZALASH MODALI */}
+      <ConfirmModal
+        visible={isConfirmClearOpen}
+        title={isRu ? 'Очистить историю чата?' : 'Tarixni tozalash'}
+        message={
+          isRu
+            ? 'Вы действительно хотите очистить всю историю переписки с AI? Все сообщения будут удалены.'
+            : 'Haqiqatan ham AI bilan bo\'lgan barcha suhbat tarixini tozalamoqchimisiz?'
+        }
+        confirmText={isRu ? 'Ha, tozalash' : 'Ha, tozalash'}
+        cancelText={isRu ? 'Bekor qilish' : 'Bekor qilish'}
+        icon="trash-bin-outline"
+        isDestructive={true}
+        onConfirm={handleConfirmClear}
+        onCancel={() => setIsConfirmClearOpen(false)}
+      />
     </Modal>
   );
 };
