@@ -149,6 +149,9 @@ export const AppProvider = ({ children }) => {
         const parsedOrders = safeJsonParse(storedOrders, []);
         const parsedAddresses = safeJsonParse(storedAddresses, DEFAULT_ADDRESSES);
         const parsedNotifs = safeJsonParse(storedNotifications, DEFAULT_NOTIFICATIONS);
+        const parsedUsers = safeJsonParse(storedUsers, []);
+        const parsedUser = safeJsonParse(storedCurrentUser, null);
+
         const initialUsersList = Array.isArray(parsedUsers) && parsedUsers.length > 0 ? parsedUsers : INITIAL_USERS;
         const initialActiveUser = (parsedUser && typeof parsedUser === 'object') ? parsedUser : INITIAL_USERS[0];
 
