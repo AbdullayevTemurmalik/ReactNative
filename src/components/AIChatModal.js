@@ -34,7 +34,6 @@ export const AIChatModal = ({ visible, onClose }) => {
   const { language, showToast } = useApp();
   const isRu = language === 'ru';
   const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',
@@ -50,36 +49,6 @@ export const AIChatModal = ({ visible, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const scrollViewRef = useRef(null);
-
-  // Klaviatura ochilganda va yopilganda Android/iOS da inputni avtomatik yuqoriga surish
-  useEffect(() => {
-    const onShow = (e) => {
-      const kh = e.endCoordinates ? e.endCoordinates.height : 0;
-      setKeyboardOffset(Platform.OS === 'ios' ? 0 : kh);
-      setTimeout(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollToEnd({ animated: true });
-        }
-      }, 100);
-    };
-    const onHide = () => {
-      setKeyboardOffset(0);
-    };
-
-    const showListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      onShow
-    );
-    const hideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      onHide
-    );
-
-    return () => {
-      showListener.remove();
-      hideListener.remove();
-    };
-  }, []);
 
   // Chat tarixini AsyncStorage dan yuklash
   useEffect(() => {
@@ -212,16 +181,16 @@ export const AIChatModal = ({ visible, onClose }) => {
       transparent={false}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <SafeAreaView
+        style={[
+          styles.safeContainer,
+          { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 28 : 0) },
+        ]}
+        edges={['left', 'right']}
+      >
         <KeyboardAvoidingView
-          style={[
-            styles.keyboardContainer,
-            Platform.OS === 'android' && keyboardOffset > 0
-              ? { marginBottom: keyboardOffset }
-              : null,
-          ]}
+          style={styles.keyboardContainer}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
           {/* Yuqori Header */}
           <View style={styles.header}>
@@ -366,10 +335,7 @@ export const AIChatModal = ({ visible, onClose }) => {
             style={[
               styles.inputBar,
               {
-                paddingBottom:
-                  keyboardOffset > 0
-                    ? 8
-                    : Math.max(insets.bottom, Platform.OS === 'android' ? 26 : 10) + 4,
+                paddingBottom: Math.max(insets.bottom, Platform.OS === 'android' ? 18 : 8) + 4,
               },
             ]}
           >

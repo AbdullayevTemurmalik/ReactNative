@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 
@@ -20,6 +20,7 @@ import { AuthModal } from './src/components/AuthModal';
 import { AIChatModal } from './src/components/AIChatModal';
 
 function MainNavigator() {
+  const insets = useSafeAreaInsets();
   const {
     isInitializing,
     activeTab,
@@ -48,7 +49,13 @@ function MainNavigator() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { paddingTop: Math.max(insets.top, Platform.OS === 'android' ? 28 : 0) },
+      ]}
+      edges={['left', 'right']}
+    >
       <StatusBar style="dark" />
       <Toast />
       <View style={styles.screenContainer}>{renderActiveScreen()}</View>

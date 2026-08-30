@@ -270,7 +270,7 @@ export const CartScreen = () => {
 
                   <TouchableOpacity
                     style={styles.deleteBtn}
-                    onPress={() => setItemToDelete(item)}
+                    onPress={() => removeFromCart(item.id)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
@@ -577,7 +577,7 @@ export const CartScreen = () => {
 
             <Text style={styles.successTitle}>{t('order_success_title')}</Text>
             <Text style={styles.orderIdBadge}>
-              ID: #{lastOrder ? lastOrder.id : 'ORD-12345'}
+              ID: #{lastOrder?.id ? String(lastOrder.id).replace(/^#/, '') : 'ORD-12345'}
             </Text>
 
             <Text style={styles.successDesc}>{t('order_success_desc')}</Text>
