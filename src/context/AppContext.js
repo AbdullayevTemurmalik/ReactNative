@@ -4,6 +4,7 @@ import * as Updates from 'expo-updates';
 import { PRODUCTS } from '../data/products';
 import { TRANSLATIONS } from '../utils/translations';
 import { formatPhoneNumber } from '../utils/formatters';
+import { sendGeminiMessage } from '../services/geminiAi';
 
 const AppContext = createContext();
 
@@ -501,6 +502,58 @@ export const AppProvider = ({ children }) => {
       return updated;
     });
   }, []);
+
+  // Offline paytda berilgan AI savoli bo'lsa, internet ulanishi bilan avtomatik javobini olib kelish va bildirishnoma chiqarish
+  useEffect(() => {
+    let isChecking = false;
+    const interval = setInterval(async () => {
+      if (isChecking) return;
+      isChecking = true;
+      try {
+        const pendingStr = await AsyncStorage.getItem('@smartbozor_pending_ai_query');
+        if (pendingStr) {
+          const { query } = JSON.parse(pendingStr);
+          if (query) {
+            const savedChat = await AsyncStorage.getItem('@smartbozor_ai_chat_v1');
+            const history = savedChat ? JSON.parse(savedChat) : [];
+            const response = await sendGeminiMessage(query, history);
+
+            if (response && response.success) {
+              await AsyncStorage.removeItem('@smartbozor_pending_ai_query');
+              const aiMsg = {
+                id: 'msg-ai-' + Date.now(),
+                text: response.reply,
+                isUser: false,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              };
+              const cleanHistory = history.filter((m) => !m.isError);
+              const updated = [...cleanHistory, aiMsg];
+              await AsyncStorage.setItem('@smartbozor_ai_chat_v1', JSON.stringify(updated.slice(-20)));
+
+              addNotification(
+                '🤖 AI javobi tayyor!',
+                `"${query.slice(0, 30)}..." savolingizga AI maslahatchi javob berdi. O'qish uchun bosing!`,
+                '🤖 Ответ AI готов!',
+                `AI ответил на ваш вопрос: "${query.slice(0, 30)}...". Нажмите, чтобы посмотреть!`
+              );
+              showToast(
+                language === 'ru'
+                  ? '🤖 Ответ от AI готов!'
+                  : '🤖 AI savolingizga javob berdi!',
+                'success'
+              );
+            }
+          }
+        }
+      } catch (e) {
+        // Internet hali ulanmagan bo'lsa
+      } finally {
+        isChecking = false;
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [addNotification, showToast, language]);
 
   // CART METODLARI
   const addToCartDirect = (product, qty = 1) => {

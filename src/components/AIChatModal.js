@@ -112,6 +112,12 @@ export const AIChatModal = ({ visible, onClose }) => {
     try {
       const response = await sendGeminiMessage(query, updatedWithUser);
 
+      if (response.success) {
+        await AsyncStorage.removeItem('@smartbozor_pending_ai_query');
+      } else {
+        await AsyncStorage.setItem('@smartbozor_pending_ai_query', JSON.stringify({ query, time: Date.now() }));
+      }
+
       const aiMsg = {
         id: 'msg-ai-' + Date.now(),
         text: response.success
@@ -119,6 +125,7 @@ export const AIChatModal = ({ visible, onClose }) => {
           : response.error || (isRu ? 'Произошла ошибка, попробуйте еще раз.' : 'Xatolik yuz berdi, qaytadan urinib ko\'ring.'),
         isUser: false,
         isError: !response.success,
+        failedQuery: !response.success ? query : null,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
@@ -126,13 +133,15 @@ export const AIChatModal = ({ visible, onClose }) => {
       setMessages(finalMessages);
       saveChatHistory(finalMessages);
     } catch (error) {
+      await AsyncStorage.setItem('@smartbozor_pending_ai_query', JSON.stringify({ query, time: Date.now() }));
       const errorMsg = {
         id: 'msg-err-' + Date.now(),
         text: isRu
-          ? 'Произошла ошибка подключения. Проверьте интернет-соединение.'
-          : 'Internet bilan aloqa uzildi. Iltimos, internetni tekshirib qayta urinib ko\'ring.',
+          ? 'Произошла ошибка подключения. Как только интернет появится, ответ придет автоматически.'
+          : '⚠️ Internet bilan aloqa uzildi. Internet ulanganda AI javobi avtomatik yetkaziladi.',
         isUser: false,
         isError: true,
+        failedQuery: query,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       const finalMessages = [...updatedWithUser, errorMsg];
@@ -275,6 +284,18 @@ export const AIChatModal = ({ visible, onClose }) => {
                     >
                       {item.text}
                     </Text>
+                    {item.isError && item.failedQuery && (
+                      <TouchableOpacity
+                        style={styles.retryBtn}
+                        onPress={() => handleSend(item.failedQuery)}
+                        activeOpacity={0.75}
+                      >
+                        <Ionicons name="refresh" size={13} color="#DC2626" />
+                        <Text style={styles.retryBtnText}>
+                          {isRu ? 'Повторить попытку' : 'Qaytadan so\'rash'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                     <Text
                       style={[
                         styles.messageTime,
@@ -502,6 +523,25 @@ const styles = StyleSheet.create({
   bubbleError: {
     backgroundColor: '#FEF2F2',
     borderColor: '#FECACA',
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginTop: 6,
+    marginBottom: 2,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  retryBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#DC2626',
   },
   messageText: {
     fontSize: 13.5,
