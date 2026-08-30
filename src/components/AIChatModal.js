@@ -11,8 +11,9 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Keyboard,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { ConfirmModal } from './ConfirmModal';
@@ -29,9 +30,11 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export const AIChatModal = ({ visible, onClose }) => {
+  const insets = useSafeAreaInsets();
   const { language, showToast } = useApp();
   const isRu = language === 'ru';
   const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const defaultWelcomeMessage = {
     id: 'msg-welcome',
@@ -47,6 +50,36 @@ export const AIChatModal = ({ visible, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const scrollViewRef = useRef(null);
+
+  // Klaviatura ochilganda va yopilganda Android/iOS da inputni avtomatik yuqoriga surish
+  useEffect(() => {
+    const onShow = (e) => {
+      const kh = e.endCoordinates ? e.endCoordinates.height : 0;
+      setKeyboardOffset(Platform.OS === 'ios' ? 0 : kh);
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true });
+        }
+      }, 100);
+    };
+    const onHide = () => {
+      setKeyboardOffset(0);
+    };
+
+    const showListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      onShow
+    );
+    const hideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      onHide
+    );
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
 
   // Chat tarixini AsyncStorage dan yuklash
   useEffect(() => {
@@ -179,10 +212,16 @@ export const AIChatModal = ({ visible, onClose }) => {
       transparent={false}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safeContainer} edges={['top']}>
         <KeyboardAvoidingView
-          style={styles.keyboardContainer}
+          style={[
+            styles.keyboardContainer,
+            Platform.OS === 'android' && keyboardOffset > 0
+              ? { marginBottom: keyboardOffset }
+              : null,
+          ]}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
           {/* Yuqori Header */}
           <View style={styles.header}>
@@ -323,7 +362,17 @@ export const AIChatModal = ({ visible, onClose }) => {
           </ScrollView>
 
           {/* Pastki xabar kiritish paneli */}
-          <View style={styles.inputBar}>
+          <View
+            style={[
+              styles.inputBar,
+              {
+                paddingBottom:
+                  keyboardOffset > 0
+                    ? 8
+                    : Math.max(insets.bottom, Platform.OS === 'android' ? 26 : 10) + 4,
+              },
+            ]}
+          >
             <TextInput
               style={styles.textInput}
               placeholder={

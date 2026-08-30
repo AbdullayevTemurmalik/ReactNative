@@ -13,12 +13,14 @@ import {
   PanResponder,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { formatPrice, getDiscountPercent } from '../utils/formatters';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const ProductDetailScreen = () => {
+  const insets = useSafeAreaInsets();
   const {
     selectedProduct,
     setSelectedProduct,
@@ -398,7 +400,12 @@ export const ProductDetailScreen = () => {
           </ScrollView>
 
           {/* Pastki savatga qo'shish paneli */}
-          <View style={styles.bottomBar}>
+          <View
+            style={[
+              styles.bottomBar,
+              { paddingBottom: Math.max(insets.bottom, Platform.OS === 'android' ? 24 : 12) + 6 },
+            ]}
+          >
             <View style={styles.stepper}>
               <TouchableOpacity
                 style={styles.stepperBtn}
