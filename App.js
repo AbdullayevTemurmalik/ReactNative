@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Platform, LogBox } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppProvider, useApp } from './src/context/AppContext';
@@ -9,6 +9,17 @@ import {
   sendWelcomeNotification,
   scheduleSmartReminders,
 } from './src/services/notificationHelper';
+
+// LogBox xabarlarini tozalash (Expo Go ogohlantirishlari ekranga xalaqit bermasligi uchun)
+LogBox.ignoreLogs([
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+  'expo-notifications: Android Push notifications',
+  'The `trigger` object you provided is invalid',
+  'Non-serializable values were found in the navigation state',
+  'AsyncStorage',
+  'VirtualizedLists should never be nested',
+  'Sending `onAnimatedValueUpdate` with no listeners registered',
+]);
 
 // Screens
 import { SplashScreen } from './src/screens/SplashScreen';
