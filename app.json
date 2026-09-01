@@ -2,7 +2,7 @@
   "expo": {
     "name": "SmartBozor",
     "slug": "smartbozor",
-    "version": "1.20.0",
+    "version": "1.23.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#2563EB"
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.20.0",
     "updates": {
       "url": "https://u.expo.dev/b920875c-9c46-4d44-bda7-8aae94235ce1",
       "checkAutomatically": "ON_LOAD",
@@ -32,7 +30,7 @@
     },
     "android": {
       "package": "com.temurmalik.shopapp",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#2563EB",
         "foregroundImage": "./assets/android-icon-foreground.png",
