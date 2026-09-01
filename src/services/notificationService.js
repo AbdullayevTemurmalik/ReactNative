@@ -7,15 +7,21 @@ import { Platform } from 'react-native';
  * Ilova ochiq (foreground) yoki orqa fonda (background) bo'lganda ham
  * ovoz bilan tepadan banner bo'lib tushishini ta'minlaydi.
  */
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+try {
+  if (Notifications && typeof Notifications.setNotificationHandler === 'function') {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }
+} catch (e) {
+  console.warn('Notifications handler init error:', e?.message);
+}
 
 /**
  * 2. Bildirishnoma ruxsatini olish va Android kanalini sozlash
@@ -25,10 +31,10 @@ export async function registerForPushNotificationsAsync() {
 
   try {
     // Android qurilmalar uchun yuqori darajadagi (MAX) ovozli kanal
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && Notifications?.setNotificationChannelAsync) {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'SmartBozor Bildirishnomalari',
-        importance: Notifications.AndroidImportance.MAX,
+        importance: Notifications.AndroidImportance?.MAX || 5,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#2563EB',
         sound: true,
@@ -39,7 +45,7 @@ export async function registerForPushNotificationsAsync() {
       // Buyurtmalar kanali
       await Notifications.setNotificationChannelAsync('orders', {
         name: 'Buyurtmalar holati',
-        importance: Notifications.AndroidImportance.MAX,
+        importance: Notifications.AndroidImportance?.MAX || 5,
         vibrationPattern: [0, 300, 200, 300],
         lightColor: '#10B981',
         sound: true,
@@ -48,7 +54,7 @@ export async function registerForPushNotificationsAsync() {
       });
     }
 
-    if (Device.isDevice || Platform.OS === 'android' || Platform.OS === 'ios') {
+    if (Notifications?.getPermissionsAsync && (Device?.isDevice || Platform.OS === 'android' || Platform.OS === 'ios')) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
@@ -80,6 +86,10 @@ export async function registerForPushNotificationsAsync() {
  */
 export async function triggerCustomNotification(title, body, delaySeconds = 0, data = {}) {
   try {
+    if (!Notifications?.scheduleNotificationAsync) {
+      return null;
+    }
+
     const trigger =
       delaySeconds && delaySeconds > 0
         ? { seconds: Math.max(1, Math.round(delaySeconds)) }
@@ -90,7 +100,7 @@ export async function triggerCustomNotification(title, body, delaySeconds = 0, d
         title,
         body,
         sound: true,
-        priority: Notifications.AndroidNotificationPriority.MAX,
+        priority: Notifications.AndroidNotificationPriority?.MAX || 'max',
         vibrate: [0, 250, 250, 250],
         data: data || {},
         channelId: data?.channelId || 'default',
