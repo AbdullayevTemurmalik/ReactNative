@@ -1,49 +1,57 @@
 import { Platform } from 'react-native';
 
-let Notifications = null;
-let Device = null;
+// Lazy-loaded native notification module holders
+let _notifications = undefined;
+let _device = undefined;
+let _handlerConfigured = false;
 
-try {
-  Notifications = require('expo-notifications');
-} catch (err) {
-  // Fallback if expo-notifications native module is missing
-}
-
-try {
-  Device = require('expo-device');
-} catch (err) {
-  // Fallback if expo-device native module is missing
-}
-
-/**
- * 1. Bildirishnoma Handler sozlamasi:
- * Ilova ochiq (foreground) yoki orqa fonda (background) bo'lganda ham
- * ovoz bilan tepadan banner bo'lib tushishini ta'minlaydi.
- */
-try {
-  if (Notifications && typeof Notifications.setNotificationHandler === 'function') {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
+function getNotifications() {
+  if (_notifications !== undefined) {
+    return _notifications;
   }
-} catch (e) {
-  // ignore
+  try {
+    _notifications = require('expo-notifications');
+    if (_notifications && !_handlerConfigured && typeof _notifications.setNotificationHandler === 'function') {
+      _handlerConfigured = true;
+      _notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+    }
+  } catch (err) {
+    _notifications = null;
+  }
+  return _notifications;
+}
+
+function getDevice() {
+  if (_device !== undefined) {
+    return _device;
+  }
+  try {
+    _device = require('expo-device');
+  } catch (err) {
+    _device = null;
+  }
+  return _device;
 }
 
 /**
- * 2. Android 8-15+ tizimlari uchun yuqori darajadagi ovozli kanallarni sozlash
+ * 1. Android 8-15+ tizimlari uchun yuqori darajadagi ovozli kanallarni sozlash
  * va bildirishnoma ruxsatini olish
  */
 export async function registerForPushNotificationsAsync() {
   try {
+    const Notifications = getNotifications();
+    if (!Notifications) return false;
+
     // Android tizimlari uchun ovozli va yuqori darajadagi (MAX) kanallar
-    if (Platform.OS === 'android' && Notifications?.setNotificationChannelAsync) {
+    if (Platform.OS === 'android' && Notifications.setNotificationChannelAsync) {
       // Standart kanal
       await Notifications.setNotificationChannelAsync('default', {
         name: 'SmartBozor Bildirishnomalari',
@@ -79,7 +87,7 @@ export async function registerForPushNotificationsAsync() {
     }
 
     // Foydalanuvchidan bildirishnoma ruxsatini so'rash (Android 13+ va iOS)
-    if (Notifications?.getPermissionsAsync) {
+    if (Notifications.getPermissionsAsync) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
@@ -106,11 +114,12 @@ export async function registerForPushNotificationsAsync() {
 }
 
 /**
- * 3. Qayta ishlatiladigan (reusable) mahalliy bildirishnoma chiqarish funksiyasi
+ * 2. Qayta ishlatiladigan (reusable) mahalliy bildirishnoma chiqarish funksiyasi
  */
 export async function triggerCustomNotification(title, body, delaySeconds = 0, data = {}) {
   try {
-    if (!Notifications?.scheduleNotificationAsync) {
+    const Notifications = getNotifications();
+    if (!Notifications || !Notifications.scheduleNotificationAsync) {
       return null;
     }
 
@@ -149,7 +158,7 @@ export async function triggerCustomNotification(title, body, delaySeconds = 0, d
 }
 
 /**
- * 4. Foydalanuvchi ilovaga kirishi bilan test / xush kelibsiz bildirishnomasi
+ * 3. Foydalanuvchi ilovaga kirishi bilan test / xush kelibsiz bildirishnomasi
  */
 export async function sendWelcomeNotification(language = 'uz') {
   try {
@@ -171,13 +180,14 @@ export async function sendWelcomeNotification(language = 'uz') {
 }
 
 /**
- * 5. AVTOMATIK MAHALLIY ESLATMALAR (Scheduled Notifications):
+ * 4. AVTOMATIK MAHALLIY ESLATMALAR (Scheduled Notifications):
  * Foydalanuvchi ilovani yopib qo'ygan taqdirda ham unga Telegram kabi
  * kunlik / haftalik qiziqarli eslatmalar kelib turadi.
  */
 export async function scheduleSmartReminders(language = 'uz') {
   try {
-    if (!Notifications?.scheduleNotificationAsync || !Notifications?.cancelAllScheduledNotificationsAsync) {
+    const Notifications = getNotifications();
+    if (!Notifications || !Notifications.scheduleNotificationAsync || !Notifications.cancelAllScheduledNotificationsAsync) {
       return;
     }
 
@@ -231,11 +241,12 @@ export async function scheduleSmartReminders(language = 'uz') {
 }
 
 /**
- * 6. Barcha rejalashtirilgan bildirishnomalarni bekor qilish
+ * 5. Barcha rejalashtirilgan bildirishnomalarni bekor qilish
  */
 export async function cancelAllScheduledNotifications() {
   try {
-    if (Notifications?.cancelAllScheduledNotificationsAsync) {
+    const Notifications = getNotifications();
+    if (Notifications && Notifications.cancelAllScheduledNotificationsAsync) {
       await Notifications.cancelAllScheduledNotificationsAsync();
     }
   } catch (error) {
