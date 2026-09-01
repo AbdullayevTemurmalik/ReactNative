@@ -103,10 +103,17 @@ export async function triggerCustomNotification(title, body, delaySeconds = 0, d
       return null;
     }
 
-    const trigger =
-      delaySeconds && delaySeconds > 0
-        ? { seconds: Math.max(1, Math.round(delaySeconds)) }
-        : null;
+    const targetChannelId = data?.channelId || 'default';
+    let trigger = null;
+
+    if (delaySeconds && delaySeconds > 0) {
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes?.TIME_INTERVAL || 'timeInterval',
+        seconds: Math.max(1, Math.round(delaySeconds)),
+        repeats: false,
+        channelId: targetChannelId,
+      };
+    }
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
@@ -116,7 +123,7 @@ export async function triggerCustomNotification(title, body, delaySeconds = 0, d
         priority: Notifications.AndroidNotificationPriority?.MAX || 'max',
         vibrate: [0, 250, 250, 250],
         data: data || {},
-        channelId: data?.channelId || 'default',
+        channelId: targetChannelId,
       },
       trigger,
     });
