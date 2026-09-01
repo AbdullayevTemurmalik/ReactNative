@@ -171,7 +171,7 @@ export const AppProvider = ({ children }) => {
           setLanguageState(storedLang);
         }
       } catch (error) {
-        console.error('AsyncStorage ma\'lumotlarini yuklashda xatolik:', error);
+        // Safe fallback
       } finally {
         setIsInitializing(false);
       }
@@ -187,7 +187,7 @@ export const AppProvider = ({ children }) => {
       await AsyncStorage.setItem(STORAGE_KEYS.LANG, newLang);
       showToast(newLang === 'ru' ? '🇷🇺 Язык изменен на Русский' : "🇺🇿 Til O'zbek tiliga o'zgartirildi", 'success');
     } catch (error) {
-      console.error('Tilni saqlashda xatolik:', error);
+      // ignore
     }
   };
 
@@ -196,7 +196,7 @@ export const AppProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(newCart));
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 
@@ -204,7 +204,7 @@ export const AppProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(newFavorites));
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 
@@ -212,7 +212,7 @@ export const AppProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(newOrders));
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 
@@ -220,7 +220,7 @@ export const AppProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.ADDRESSES, JSON.stringify(newAddresses));
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 
@@ -228,7 +228,7 @@ export const AppProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(newNotifs));
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 
@@ -236,7 +236,7 @@ export const AppProvider = ({ children }) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(newUsers));
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 
@@ -248,7 +248,7 @@ export const AppProvider = ({ children }) => {
         await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
     } catch (error) {
-      console.error(error);
+      // ignore
     }
   };
 

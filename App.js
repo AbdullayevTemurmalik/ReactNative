@@ -10,16 +10,8 @@ import {
   scheduleSmartReminders,
 } from './src/services/notificationHelper';
 
-// LogBox xabarlarini tozalash (Expo Go ogohlantirishlari ekranga xalaqit bermasligi uchun)
-LogBox.ignoreLogs([
-  '`expo-notifications` functionality is not fully supported in Expo Go',
-  'expo-notifications: Android Push notifications',
-  'The `trigger` object you provided is invalid',
-  'Non-serializable values were found in the navigation state',
-  'AsyncStorage',
-  'VirtualizedLists should never be nested',
-  'Sending `onAnimatedValueUpdate` with no listeners registered',
-]);
+// LogBox ogohlantirishlarini butunlay o'chirish (ekranga qalqib chiqmasligi uchun)
+LogBox.ignoreAllLogs(true);
 
 // Screens
 import { SplashScreen } from './src/screens/SplashScreen';
