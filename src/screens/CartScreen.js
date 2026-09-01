@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { formatPrice, formatPhoneNumber, isPhoneValid } from '../utils/formatters';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { MapPickerModal } from '../components/MapPickerModal';
 
 export const CartScreen = () => {
   const {
@@ -43,6 +44,8 @@ export const CartScreen = () => {
 
   // Checkout modal holati
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [deliveryType, setDeliveryType] = useState('delivery'); // 'delivery' yoki 'pickup'
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('+998 ');
   const [address, setAddress] = useState('');
@@ -126,10 +129,11 @@ export const CartScreen = () => {
   const finalTotalPrice = Math.max(0, cartTotalPrice - promoDiscountAmount);
 
   const handleConfirmOrder = () => {
+    const isPickup = deliveryType === 'pickup';
     const errors = {
       name: !customerName.trim(),
       phone: !isPhoneValid(phoneNumber),
-      address: !address.trim(),
+      address: !isPickup && !address.trim(),
     };
 
     if (errors.name || errors.phone || errors.address) {
@@ -143,17 +147,22 @@ export const CartScreen = () => {
           ? '⚠️ Введите полный номер телефона (+998 90 123 45 67)'
           : '⚠️ Telefon raqamini to\'liq kiriting (+998 90 123 45 67)';
       } else if (errors.address) {
-        msg = isRu ? '⚠️ Введите адрес доставки' : '⚠️ Yetkazib berish manzilini kiriting';
+        msg = isRu ? '⚠️ Укажите адрес доставки на карте' : '⚠️ Yetkazib berish manzilini xaritadan tanlang yoki kiriting';
       }
 
       displayModalError(msg, errors);
       return;
     }
 
+    const finalAddress = isPickup
+      ? (isRu ? '🏪 Самовывоз: Главный филиал SmartBozor (г. Ташкент, ул. Амира Темура, 45)' : '🏪 O\'zim borib olaman: SmartBozor Bosh Do\'koni (Toshkent sh., Amir Temur ko\'chasi, 45-uy)')
+      : address.trim();
+
     const orderData = {
       customerName,
       phoneNumber,
-      address,
+      address: finalAddress,
+      deliveryType,
       paymentMethod,
       promoCode: appliedPromo?.code || null,
       finalAmount: finalTotalPrice,
@@ -168,6 +177,7 @@ export const CartScreen = () => {
       setCustomerName('');
       setPhoneNumber('+998 ');
       setAddress('');
+      setDeliveryType('delivery');
       setFormError('');
       setFieldErrors({ name: false, phone: false, address: false });
     }
@@ -481,27 +491,152 @@ export const CartScreen = () => {
                 maxLength={17}
               />
 
-              <View style={styles.fieldHeaderRow}>
-                <Text style={styles.inputLabel}>{t('address_label')}</Text>
-                {fieldErrors.address && (
-                  <Text style={styles.fieldErrorText}>
-                    {isRu ? 'Укажите адрес' : 'Manzilni kiriting'}
+              {/* Yetkazib berish turi: Yetkazib berish yoki O'zim olib ketaman */}
+              <Text style={styles.inputLabel}>
+                {isRu ? 'Способ получения' : 'Qabul qilish usuli'}
+              </Text>
+              <View style={styles.deliveryTypeRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.deliveryTypeBtn,
+                    deliveryType === 'delivery' && styles.deliveryTypeBtnActive,
+                  ]}
+                  onPress={() => {
+                    setDeliveryType('delivery');
+                    setFieldErrors((prev) => ({ ...prev, address: false }));
+                    setFormError('');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="bicycle"
+                    size={18}
+                    color={deliveryType === 'delivery' ? '#2563EB' : '#64748B'}
+                  />
+                  <Text
+                    style={[
+                      styles.deliveryTypeBtnText,
+                      deliveryType === 'delivery' && styles.deliveryTypeBtnTextActive,
+                    ]}
+                  >
+                    {isRu ? 'Доставка' : 'Yetkazib berish'}
                   </Text>
-                )}
+                  {deliveryType === 'delivery' && (
+                    <Ionicons name="checkmark-circle" size={16} color="#2563EB" />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.deliveryTypeBtn,
+                    deliveryType === 'pickup' && styles.deliveryTypeBtnActive,
+                  ]}
+                  onPress={() => {
+                    setDeliveryType('pickup');
+                    setFieldErrors((prev) => ({ ...prev, address: false }));
+                    setFormError('');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="storefront-outline"
+                    size={18}
+                    color={deliveryType === 'pickup' ? '#2563EB' : '#64748B'}
+                  />
+                  <Text
+                    style={[
+                      styles.deliveryTypeBtnText,
+                      deliveryType === 'pickup' && styles.deliveryTypeBtnTextActive,
+                    ]}
+                  >
+                    {isRu ? 'Самовывоз' : "O'zim borib olaman"}
+                  </Text>
+                  {deliveryType === 'pickup' && (
+                    <Ionicons name="checkmark-circle" size={16} color="#2563EB" />
+                  )}
+                </TouchableOpacity>
               </View>
-              <TextInput
-                style={[
-                  styles.modalInput,
-                  styles.textArea,
-                  fieldErrors.address && styles.inputErrorBorder,
-                ]}
-                placeholder={t('address_placeholder')}
-                placeholderTextColor="#94A3B8"
-                multiline
-                numberOfLines={3}
-                value={address}
-                onChangeText={handleAddressChange}
-              />
+
+              {deliveryType === 'delivery' ? (
+                <>
+                  <View style={styles.fieldHeaderRow}>
+                    <Text style={styles.inputLabel}>{t('address_label')}</Text>
+                    <TouchableOpacity
+                      style={styles.openMapBadge}
+                      onPress={() => setIsMapPickerOpen(true)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="map-outline" size={14} color="#2563EB" />
+                      <Text style={styles.openMapBadgeText}>
+                        {isRu ? 'Карта 📍' : 'Xaritadan tanlash 📍'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.mapInputWrapper}>
+                    <TextInput
+                      style={[
+                        styles.modalInput,
+                        styles.textArea,
+                        fieldErrors.address && styles.inputErrorBorder,
+                      ]}
+                      placeholder={
+                        isRu
+                          ? 'Укажите адрес или выберите на карте...'
+                          : "Manzilni kiriting yoki xaritadan tanlang..."
+                      }
+                      placeholderTextColor="#94A3B8"
+                      multiline
+                      numberOfLines={3}
+                      value={address}
+                      onChangeText={handleAddressChange}
+                    />
+                    <TouchableOpacity
+                      style={styles.mapFloatingBtn}
+                      onPress={() => setIsMapPickerOpen(true)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="navigate-circle-outline" size={18} color="#2563EB" />
+                      <Text style={styles.mapFloatingBtnText}>
+                        {isRu ? 'Карта' : 'Xarita'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                /* Do'kondan olib ketish ma'lumoti */
+                <View style={styles.storePickupCard}>
+                  <View style={styles.storePickupHeader}>
+                    <Ionicons name="storefront" size={20} color="#16A34A" />
+                    <Text style={styles.storePickupTitle}>
+                      {isRu ? 'Главный филиал SmartBozor' : "SmartBozor Bosh Do'koni"}
+                    </Text>
+                  </View>
+                  <View style={styles.storePickupRow}>
+                    <Ionicons name="location-outline" size={16} color="#475569" />
+                    <Text style={styles.storePickupText}>
+                      {isRu
+                        ? 'г. Ташкент, ул. Амира Темура, 45 (м. Алишер Навои)'
+                        : "Toshkent sh., Amir Temur ko'chasi 45-uy (Mo'ljal: Alisher Navoiy metro)"}
+                    </Text>
+                  </View>
+                  <View style={styles.storePickupRow}>
+                    <Ionicons name="time-outline" size={16} color="#475569" />
+                    <Text style={styles.storePickupText}>
+                      {isRu ? 'Режим работы: 09:00 - 22:00 (ежедневно)' : 'Ish vaqti: Har kuni 09:00 - 22:00'}
+                    </Text>
+                  </View>
+                  <View style={styles.storePickupRow}>
+                    <Ionicons name="call-outline" size={16} color="#475569" />
+                    <Text style={styles.storePickupText}>+998 71 200 00 00</Text>
+                  </View>
+                  <View style={styles.storePickupBadge}>
+                    <Ionicons name="checkmark-circle" size={14} color="#15803D" />
+                    <Text style={styles.storePickupBadgeText}>
+                      {isRu ? 'Готовность к выдаче: 15-30 минут' : "Tayyor bo'lish vaqti: 15-30 daqiqa"}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               {/* To'lov usuli */}
               <Text style={styles.inputLabel}>{t('payment_method_title')}</Text>
@@ -608,6 +743,21 @@ export const CartScreen = () => {
         onCancel={() => setItemToDelete(null)}
         icon="trash-outline"
         isDestructive={true}
+      />
+
+      {/* XARITADAN MANZIL TANLASH MODALI */}
+      <MapPickerModal
+        visible={isMapPickerOpen}
+        onClose={() => setIsMapPickerOpen(false)}
+        onSelectAddress={(selectedAddr) => {
+          setAddress(selectedAddr);
+          if (fieldErrors.address) {
+            setFieldErrors((prev) => ({ ...prev, address: false }));
+            setFormError('');
+          }
+        }}
+        language={language}
+        initialAddress={address}
       />
     </View>
   );
@@ -1004,6 +1154,125 @@ const styles = StyleSheet.create({
   inputValid: {
     borderColor: '#10B981',
     backgroundColor: '#F0FDF4',
+  },
+  deliveryTypeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 14,
+  },
+  deliveryTypeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    gap: 6,
+  },
+  deliveryTypeBtnActive: {
+    borderColor: '#2563EB',
+    backgroundColor: '#EFF6FF',
+  },
+  deliveryTypeBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  deliveryTypeBtnTextActive: {
+    color: '#1E40AF',
+    fontWeight: '700',
+  },
+  openMapBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  openMapBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  mapInputWrapper: {
+    position: 'relative',
+  },
+  mapFloatingBtn: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  mapFloatingBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  storePickupCard: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+  },
+  storePickupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  storePickupTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  storePickupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  storePickupText: {
+    fontSize: 12,
+    color: '#334155',
+    flex: 1,
+  },
+  storePickupBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginTop: 6,
+    gap: 6,
+    alignSelf: 'flex-start',
+  },
+  storePickupBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#15803D',
   },
   textArea: {
     height: 80,
