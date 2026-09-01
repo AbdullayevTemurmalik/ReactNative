@@ -185,16 +185,6 @@ export const CartScreen = () => {
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('cart_title')}</Text>
-        {cart.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setIsClearAllModalOpen(true)}
-            style={styles.clearBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="trash-outline" size={16} color="#EF4444" />
-            <Text style={styles.clearBtnText}>{t('clear_cart')}</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {cart.length === 0 ? (
@@ -270,7 +260,7 @@ export const CartScreen = () => {
 
                   <TouchableOpacity
                     style={styles.deleteBtn}
-                    onPress={() => removeFromCart(item.id)}
+                    onPress={() => setItemToDelete(item)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
@@ -595,6 +585,30 @@ export const CartScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* MAHSULOTNI SAVATDAN O'CHIRISHNI TASDIQLASH MODALI */}
+      <ConfirmModal
+        visible={!!itemToDelete}
+        title={isRu ? 'Удаление товара' : "Mahsulotni o'chirish"}
+        message={
+          itemToDelete
+            ? isRu
+              ? `Вы действительно хотите удалить "${itemToDelete.name}" из корзины?`
+              : `Rostdan ham "${itemToDelete.name}" mahsulotini savatdan o'chirmoqchimisiz?`
+            : ''
+        }
+        confirmText={isRu ? 'Да, удалить' : "Ha, o'chirish"}
+        cancelText={isRu ? 'Отмена' : "Yo'q, qolsin"}
+        onConfirm={() => {
+          if (itemToDelete) {
+            removeFromCart(itemToDelete.id);
+            setItemToDelete(null);
+          }
+        }}
+        onCancel={() => setItemToDelete(null)}
+        icon="trash-outline"
+        isDestructive={true}
+      />
     </View>
   );
 };

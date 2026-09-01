@@ -86,7 +86,7 @@ export const FavoritesScreen = () => {
                     <View style={styles.categoryRow}>
                       <Text style={styles.category}>{t(product.categoryKey || 'cat_all')}</Text>
                       <TouchableOpacity
-                        onPress={() => removeFromFavorites(product.id)}
+                        onPress={() => setItemToRemove(product)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
                         <Ionicons name="heart" size={22} color="#EF4444" />

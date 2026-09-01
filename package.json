@@ -1,6 +1,6 @@
 {
   "name": "smartbozor",
-  "version": "1.22.0",
+  "version": "1.22.1",
   "main": "index.js",
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
