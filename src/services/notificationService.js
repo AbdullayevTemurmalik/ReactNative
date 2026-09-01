@@ -1,6 +1,19 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+
+let Notifications = null;
+let Device = null;
+
+try {
+  Notifications = require('expo-notifications');
+} catch (err) {
+  // Native notification module fallback
+}
+
+try {
+  Device = require('expo-device');
+} catch (err) {
+  // Device module fallback
+}
 
 /**
  * 1. Bildirishnoma Handler sozlamasi:
@@ -20,7 +33,7 @@ try {
     });
   }
 } catch (e) {
-  console.warn('Notifications handler init error:', e?.message);
+  // ignore
 }
 
 /**
