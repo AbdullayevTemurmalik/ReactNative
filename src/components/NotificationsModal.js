@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { triggerCustomNotification } from '../services/notificationHelper';
 
 export const NotificationsModal = ({ visible, onClose }) => {
-  const { notifications, markNotificationsAsRead, language } = useApp();
+  const { notifications, markNotificationsAsRead, language, showToast } = useApp();
   const isRu = language === 'ru';
 
   useEffect(() => {
@@ -89,6 +90,28 @@ export const NotificationsModal = ({ visible, onClose }) => {
                   </View>
                 </ScrollView>
               )}
+
+              {/* Test bildirishnoma tugmasi */}
+              <TouchableOpacity
+                style={styles.testNotifBtn}
+                onPress={async () => {
+                  await triggerCustomNotification(
+                    isRu ? '🔔 Тестовое уведомление!' : '🔔 Test bildirishnoma!',
+                    isRu
+                      ? 'Звук и баннер работают отлично! Приятных покупок в SmartBozor 🛍️'
+                      : "Ovoz va banner a'lo darajada ishlamoqda! Smart Bozorda maroqli xaridlar 🛍️",
+                    0,
+                    { channelId: 'default' }
+                  );
+                  showToast(isRu ? '🔔 Уведомление отправлено!' : '🔔 Bildirishnoma yuborildi!', 'success');
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="notifications-circle" size={20} color="#2563EB" />
+                <Text style={styles.testNotifBtnText}>
+                  {isRu ? 'Отправить тестовое уведомление' : 'Test bildirishnoma yuborish'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -215,5 +238,22 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     color: '#94A3B8',
     fontWeight: '500',
+  },
+  testNotifBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginTop: 12,
+    gap: 8,
+  },
+  testNotifBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
   },
 });
