@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
 /**
@@ -24,7 +25,7 @@ try {
 
 /**
  * 2. Android 8-15+ tizimlari uchun yuqori darajadagi ovozli kanallarni sozlash
- * va bildirishnoma ruxsatini olish (Remote tokenlarsiz, faqat Local)
+ * va bildirishnoma ruxsatini olish (Play Protect standartlariga mos)
  */
 export async function registerForPushNotificationsAsync() {
   try {
@@ -40,6 +41,7 @@ export async function registerForPushNotificationsAsync() {
         sound: 'default',
         enableVibrate: true,
         showBadge: true,
+        enableLights: true,
       });
 
       await Notifications.setNotificationChannelAsync('orders', {
@@ -50,6 +52,7 @@ export async function registerForPushNotificationsAsync() {
         sound: 'default',
         enableVibrate: true,
         showBadge: true,
+        enableLights: true,
       });
 
       await Notifications.setNotificationChannelAsync('promos', {
@@ -60,6 +63,7 @@ export async function registerForPushNotificationsAsync() {
         sound: 'default',
         enableVibrate: true,
         showBadge: true,
+        enableLights: true,
       });
     }
 
@@ -75,6 +79,7 @@ export async function registerForPushNotificationsAsync() {
             allowBadge: true,
             allowSound: true,
           },
+          android: {},
         });
         finalStatus = status;
       }
@@ -226,4 +231,38 @@ export async function cancelAllScheduledNotifications() {
   } catch (error) {
     // ignore
   }
+}
+
+/**
+ * 7. Bildirishnoma qabul qiluvchi listener obunasi (Memory leak oldini olish bilan)
+ */
+export function subscribeNotificationEvents(onReceive, onResponse) {
+  const subscriptions = [];
+  try {
+    if (Notifications?.addNotificationReceivedListener && onReceive) {
+      const sub = Notifications.addNotificationReceivedListener(onReceive);
+      subscriptions.push(sub);
+    }
+    if (Notifications?.addNotificationResponseReceivedListener && onResponse) {
+      const sub = Notifications.addNotificationResponseReceivedListener(onResponse);
+      subscriptions.push(sub);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  // Unmount vaqtida tozalash funksiyasi
+  return () => {
+    subscriptions.forEach((sub) => {
+      try {
+        if (sub && typeof sub.remove === 'function') {
+          sub.remove();
+        } else if (Notifications?.removeNotificationSubscription) {
+          Notifications.removeNotificationSubscription(sub);
+        }
+      } catch (e) {
+        // ignore
+      }
+    });
+  };
 }

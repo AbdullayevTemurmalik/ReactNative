@@ -8,6 +8,7 @@ import {
   registerForPushNotificationsAsync,
   sendWelcomeNotification,
   scheduleSmartReminders,
+  subscribeNotificationEvents,
 } from './src/services/notificationHelper';
 
 // LogBox ogohlantirishlarini butunlay o'chirish (ekranga qalqib chiqmasligi uchun)
@@ -52,6 +53,11 @@ function MainNavigator() {
       }
     }
     initNotifications();
+
+    const unsubscribe = subscribeNotificationEvents();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   if (isInitializing) {

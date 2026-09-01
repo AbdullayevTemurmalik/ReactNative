@@ -390,7 +390,7 @@ export const ProfileScreen = () => {
         </View>
 
         {/* Versiya */}
-        <Text style={styles.versionText}>SmartBozor Mobile v1.23.1 (Expo SDK 54)</Text>
+        <Text style={styles.versionText}>SmartBozor Mobile v1.23.2 (Expo SDK 54)</Text>
       </ScrollView>
 
       {/* MODALLAR */}

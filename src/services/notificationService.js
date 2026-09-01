@@ -7,4 +7,5 @@ export {
   sendWelcomeNotification,
   scheduleSmartReminders,
   cancelAllScheduledNotifications,
+  subscribeNotificationEvents,
 } from './notificationHelper';
