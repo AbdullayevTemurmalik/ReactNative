@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import {
+  registerForPushNotificationsAsync,
+  sendWelcomeNotification,
+} from './src/services/notificationService';
 
 // Screens
 import { SplashScreen } from './src/screens/SplashScreen';
@@ -29,6 +33,19 @@ function MainNavigator() {
     isAiChatVisible,
     setIsAiChatVisible,
   } = useApp();
+
+  // 1. Ilova ochilganda bildirishnoma ruxsatini olish va test xush kelibsiz xabarini yuborish
+  useEffect(() => {
+    async function initNotifications() {
+      try {
+        await registerForPushNotificationsAsync();
+        sendWelcomeNotification();
+      } catch (err) {
+        console.warn('Bildirishnoma sozlashda xatolik:', err?.message);
+      }
+    }
+    initNotifications();
+  }, []);
 
   if (isInitializing) {
     return <SplashScreen />;

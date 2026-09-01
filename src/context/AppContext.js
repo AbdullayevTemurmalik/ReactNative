@@ -5,6 +5,7 @@ import { PRODUCTS } from '../data/products';
 import { TRANSLATIONS } from '../utils/translations';
 import { formatPhoneNumber } from '../utils/formatters';
 import { sendGeminiMessage } from '../services/geminiAi';
+import { triggerCustomNotification } from '../services/notificationService';
 
 const AppContext = createContext();
 
@@ -483,6 +484,11 @@ export const AppProvider = ({ children }) => {
 
   // Bildirishnoma qo'shish
   const addNotification = useCallback((title, body, title_ru, body_ru) => {
+    // Qurilma tizimiga (Heads-up banner + tovush) bildirishnoma chiqarish
+    const activeTitle = language === 'ru' ? (title_ru || title) : title;
+    const activeBody = language === 'ru' ? (body_ru || body) : body;
+    triggerCustomNotification(activeTitle, activeBody, 0);
+
     setNotifications((prev) => {
       // Duplikat xabarlarni qayta qo'shmaslik
       const alreadyExists = prev.some((n) => n.title === title || (title_ru && n.title_ru === title_ru));
@@ -502,7 +508,7 @@ export const AppProvider = ({ children }) => {
       saveNotificationsToStorage(updated);
       return updated;
     });
-  }, []);
+  }, [language]);
 
   const markNotificationsAsRead = useCallback(() => {
     setNotifications((prev) => {
@@ -852,6 +858,8 @@ export const AppProvider = ({ children }) => {
     deleteAddress,
     notifications,
     unreadNotifsCount,
+    addNotification,
+    triggerCustomNotification,
     markNotificationsAsRead,
     isInitializing,
     activeTab,
