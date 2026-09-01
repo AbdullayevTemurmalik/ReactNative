@@ -3,9 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 import { PRODUCTS } from '../data/products';
 import { TRANSLATIONS } from '../utils/translations';
-import { formatPhoneNumber } from '../utils/formatters';
 import { sendGeminiMessage } from '../services/geminiAi';
-import { triggerCustomNotification } from '../services/notificationService';
+import { triggerCustomNotification, scheduleSmartReminders } from '../services/notificationHelper';
 
 const AppContext = createContext();
 

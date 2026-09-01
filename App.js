@@ -7,7 +7,8 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import {
   registerForPushNotificationsAsync,
   sendWelcomeNotification,
-} from './src/services/notificationService';
+  scheduleSmartReminders,
+} from './src/services/notificationHelper';
 
 // Screens
 import { SplashScreen } from './src/screens/SplashScreen';
@@ -34,14 +35,17 @@ function MainNavigator() {
     setIsAiChatVisible,
   } = useApp();
 
-  // 1. Ilova ochilganda bildirishnoma ruxsatini olish va test xush kelibsiz xabarini yuborish
+  // 1. Ilova ochilganda bildirishnoma ruxsatini olish, xush kelibsiz xabari va avtomatik eslatmalar jadvalini rejalashtirish
   useEffect(() => {
     async function initNotifications() {
       try {
-        await registerForPushNotificationsAsync();
-        sendWelcomeNotification();
+        const hasPermission = await registerForPushNotificationsAsync();
+        if (hasPermission) {
+          sendWelcomeNotification();
+          scheduleSmartReminders();
+        }
       } catch (err) {
-        console.warn('Bildirishnoma sozlashda xatolik:', err?.message);
+        // ignore
       }
     }
     initNotifications();
